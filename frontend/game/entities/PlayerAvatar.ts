@@ -50,6 +50,12 @@ export class PlayerAvatar {
       .zone(0, -10, 44, 58)
       .setInteractive({ useHandCursor: true });
     hitArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      const sceneAny = this.scene as any;
+      if (sceneAny?.isAiming?.() || pointer.rightButtonDown()) {
+        pointer.event.stopPropagation();
+        sceneAny.handleAimThrow?.(pointer.worldX, pointer.worldY);
+        return;
+      }
       pointer.event.stopPropagation();
       gameEventBus.emit('client:selectPlayer', { userId: this.state.userId });
     });
@@ -262,6 +268,42 @@ export class PlayerAvatar {
       duration: 1350,
       ease: 'Cubic.easeOut',
       onComplete: () => floatText.destroy(),
+    });
+  }
+
+  public playHitReaction(message = 'Đau quá!') {
+    this.playFloatingEmote('💥');
+    this.showChatBubble(message, 5000);
+
+    this.bodyContainer.x = 0;
+    this.scene.tweens.add({
+      targets: this.bodyContainer,
+      x: { from: -7, to: 7 },
+      duration: 55,
+      yoyo: true,
+      repeat: 4,
+      onComplete: () => {
+        this.bodyContainer.x = 0;
+      },
+    });
+  }
+
+  public playDodgeReaction(message = 'Né đẹp! Hụt rồi nhé 😜') {
+    this.playFloatingEmote('💨');
+    this.showChatBubble(message, 5000);
+
+    const dodgeDir = Math.random() < 0.5 ? -1 : 1;
+    this.bodyContainer.x = 0;
+    this.scene.tweens.add({
+      targets: this.bodyContainer,
+      x: dodgeDir * 24,
+      duration: 150,
+      yoyo: true,
+      hold: 90,
+      ease: 'Cubic.easeOut',
+      onComplete: () => {
+        this.bodyContainer.x = 0;
+      },
     });
   }
 

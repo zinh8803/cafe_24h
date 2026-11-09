@@ -107,6 +107,7 @@ export const useCafeStore = defineStore('cafe', {
     polaroidDataUrl: '',
     toastMessage: '',
     mutedUserIds: [] as string[],
+    isAimingThrow: false,
   }),
 
   getters: {
@@ -203,6 +204,14 @@ export const useCafeStore = defineStore('cafe', {
         this.mutedUserIds = this.mutedUserIds.filter((id) => id !== userId);
       } else {
         this.mutedUserIds.push(userId);
+      }
+    },
+
+    toggleAimThrow(val?: boolean) {
+      this.isAimingThrow = typeof val === 'boolean' ? val : !this.isAimingThrow;
+      gameEventBus.emit('scene:aimMode', { isAiming: this.isAimingThrow });
+      if (this.isAimingThrow) {
+        this.showToast('🎯 Chế độ nhắm: Click chuột vào vị trí bất kỳ để ném (hoặc Click chuột phải để ném nhanh!)');
       }
     },
   },

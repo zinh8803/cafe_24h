@@ -124,6 +124,18 @@ export function useCafeSocket() {
       gameEventBus.on('client:zoneChanged', ({ zone }) => {
         store.currentZone = zone;
       });
+
+      gameEventBus.on('client:throwDirection', ({ targetX, targetY }) => {
+        throwCupDirection(targetX, targetY);
+      });
+
+      gameEventBus.on('client:aimModeChanged', ({ isAiming }) => {
+        store.isAimingThrow = isAiming;
+      });
+
+      gameEventBus.on('client:toggleAim', () => {
+        store.toggleAimThrow();
+      });
     }
 
     if (sharedSocket) {
@@ -303,6 +315,92 @@ export function useCafeSocket() {
         );
       }
       gameEventBus.emit('scene:cheers', payload);
+    });
+
+    socket.on('cup:thrown', (payload) => {
+      gameEventBus.emit('scene:cupThrown', payload);
+
+      setTimeout(() => {
+        const reactionText = payload.dodged ? 'Né đẹp! Hụt rồi nhé 😜' : 'Đau quá!';
+        if (!store.mutedUserIds.includes(payload.toUserId)) {
+          store.chats.push({
+            id: `cup_hit_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            userId: payload.toUserId,
+            nickname: payload.toNickname,
+            content: reactionText,
+            createdAt: new Date().toISOString(),
+          });
+          if (store.chats.length > 60) store.chats.shift();
+        }
+
+        if (payload.dodged) {
+          if (payload.toUserId === store.userId) {
+            store.showToast(
+              `💨 Bạn vừa phản xạ né gọn chiếc ly ${payload.drinkIcon} từ ${payload.fromNickname}!`,
+            );
+          } else {
+            store.showToast(
+              `💨 ${payload.toNickname} vừa né gọn chiếc ly ${payload.drinkIcon} của ${payload.fromNickname}!`,
+            );
+          }
+        } else if (payload.toUserId === store.userId) {
+          store.showToast(
+            `💥 ${payload.fromNickname} vừa ném ly ${payload.drinkIcon} trúng bạn: "Đau quá!"`,
+          );
+        } else {
+          store.showToast(
+            `🎯 ${payload.fromNickname} vừa ném ly ${payload.drinkIcon} trúng ${payload.toNickname}: "Đau quá!"`,
+          );
+        }
+      }, 520);
+    });
+
+    socket.on('cup:thrownDirection', (payload) => {
+      gameEventBus.emit('scene:cupThrownDirection', payload);
+
+      setTimeout(() => {
+        if (payload.hitUserId) {
+          const reactionText = payload.dodged ? 'Né đẹp! Hụt rồi nhé 😜' : 'Đau quá!';
+          if (!store.mutedUserIds.includes(payload.hitUserId)) {
+            store.chats.push({
+              id: `cup_dir_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+              userId: payload.hitUserId,
+              nickname: payload.hitNickname,
+              content: reactionText,
+              createdAt: new Date().toISOString(),
+            });
+            if (store.chats.length > 60) store.chats.shift();
+          }
+
+          if (payload.dodged) {
+            if (payload.hitUserId === store.userId) {
+              store.showToast(
+                `💨 Bạn vừa phản xạ né gọn chiếc ly ${payload.drinkIcon} từ ${payload.fromNickname}!`,
+              );
+            } else {
+              store.showToast(
+                `💨 ${payload.hitNickname} vừa né gọn chiếc ly ${payload.drinkIcon} của ${payload.fromNickname}!`,
+              );
+            }
+          } else if (payload.hitUserId === store.userId) {
+            store.showToast(
+              `💥 ${payload.fromNickname} vừa ném ly ${payload.drinkIcon} trúng bạn: "Đau quá!"`,
+            );
+          } else {
+            store.showToast(
+              `🎯 ${payload.fromNickname} vừa ném ly ${payload.drinkIcon} trúng ${payload.hitNickname}: "Đau quá!"`,
+            );
+          }
+        } else {
+          if (payload.fromUserId === store.userId) {
+            store.showToast(`🎯 Bạn vừa ném chiếc ly ${payload.drinkIcon} về phía sàn vỡ toang!`);
+          } else {
+            store.showToast(
+              `🎯 ${payload.fromNickname} vừa ném chiếc ly ${payload.drinkIcon} rơi xuống sàn vỡ toang!`,
+            );
+          }
+        }
+      }, 500);
     });
 
     socket.on('chat:new', (msg) => {
@@ -503,6 +601,141 @@ export function useCafeSocket() {
     }
   }
 
+  function throwStraightForward() {
+    const self = store.players.find((p) => p.userId === store.userId);
+    const startX = self?.x || 580;
+    const startY = self?.y || 650;
+    const dir = self?.direction || 'up';
+
+    let targetX = startX;
+    let targetY = startY;
+    const throwDist = 280;
+
+    if (dir === 'up') targetY -= throwDist;
+    else if (dir === 'down') targetY += throwDist;
+    else if (dir === 'left') targetX -= throwDist;
+    else if (dir === 'right') targetX += throwDist;
+
+    store.toggleAimThrow(false);
+    throwCupDirection(targetX, targetY);
+  }
+
+  function throwCupDirection(targetX: number, targetY: number) {
+    if (sharedSocket?.connected) {
+      sharedSocket.emit('cup:throwDirection', { targetX, targetY });
+    } else {
+      const self = store.players.find((p) => p.userId === store.userId);
+      const startX = self?.x || 580;
+      const startY = self?.y || 650;
+      let tx = targetX;
+      let ty = targetY;
+      const dx = tx - startX;
+      const dy = ty - startY;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 10) return;
+
+      const maxRange = 600;
+      if (dist > maxRange) {
+        tx = startX + (dx / dist) * maxRange;
+        ty = startY + (dy / dist) * maxRange;
+      }
+
+      let bestHit: any = null;
+      for (const p of store.players) {
+        if (p.userId === store.userId) continue;
+        const l2 = (tx - startX) * (tx - startX) + (ty - startY) * (ty - startY);
+        let t = ((p.x - startX) * (tx - startX) + (p.y - startY) * (ty - startY)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        const projX = startX + t * (tx - startX);
+        const projY = startY + t * (ty - startY);
+        const d = Math.hypot(p.x - projX, p.y - projY);
+
+        if (t > 0.04 && t <= 1.0 && d <= 38) {
+          if (!bestHit || t < bestHit.t) {
+            bestHit = { player: p, t };
+          }
+        }
+      }
+
+      const drink = store.currentDrinkConfig;
+      const dodged = Math.random() < 0.4;
+      const payload = {
+        fromUserId: store.userId,
+        fromNickname: store.nickname,
+        startX,
+        startY,
+        targetX: bestHit ? bestHit.player.x : Math.round(tx),
+        targetY: bestHit ? bestHit.player.y : Math.round(ty),
+        hitUserId: bestHit ? bestHit.player.userId : null,
+        hitNickname: bestHit ? bestHit.player.nickname : null,
+        dodged: bestHit ? dodged : false,
+        drinkIcon: drink.icon,
+        drinkName: drink.name,
+      };
+
+      gameEventBus.emit('scene:cupThrownDirection', payload);
+
+      setTimeout(() => {
+        if (payload.hitUserId) {
+          store.chats.push({
+            id: `cup_dir_${Date.now()}`,
+            userId: payload.hitUserId,
+            nickname: payload.hitNickname!,
+            content: dodged ? 'Né đẹp! Hụt rồi nhé 😜' : 'Đau quá!',
+            createdAt: new Date().toISOString(),
+          });
+          if (dodged) {
+            store.showToast(`💨 ${payload.hitNickname} vừa né gọn chiếc ly ${drink.icon}!`);
+          } else {
+            store.showToast(`🎯 Bạn vừa ném ly ${drink.icon} trúng ${payload.hitNickname}: "Đau quá!"`);
+          }
+        } else {
+          store.showToast(`🎯 Chiếc ly ${drink.icon} rơi trúng sàn vỡ toang!`);
+        }
+      }, 500);
+    }
+  }
+
+  function throwCup(targetUserId: string) {
+    if (!targetUserId || targetUserId === store.userId) return;
+    if (sharedSocket?.connected) {
+      sharedSocket.emit('cup:throw', { targetUserId });
+    } else {
+      const target = store.players.find((p) => p.userId === targetUserId);
+      if (!target) return;
+      const drink = store.currentDrinkConfig;
+      const dodged = Math.random() < 0.4;
+      const payload = {
+        fromUserId: store.userId,
+        fromNickname: store.nickname,
+        toUserId: target.userId,
+        toNickname: target.nickname,
+        drinkIcon: drink.icon,
+        drinkName: drink.name,
+        dodged,
+      };
+      gameEventBus.emit('scene:cupThrown', payload);
+      setTimeout(() => {
+        store.chats.push({
+          id: `cup_hit_${Date.now()}`,
+          userId: target.userId,
+          nickname: target.nickname,
+          content: dodged ? 'Né đẹp! Hụt rồi nhé 😜' : 'Đau quá!',
+          createdAt: new Date().toISOString(),
+        });
+        if (dodged) {
+          store.showToast(
+            `💨 ${target.nickname} vừa né gọn chiếc ly ${drink.icon} của ${store.nickname}!`,
+          );
+        } else {
+          store.showToast(
+            `🎯 ${store.nickname} vừa ném ly ${drink.icon} trúng ${target.nickname}: "Đau quá!"`,
+          );
+        }
+      }, 520);
+    }
+  }
+
   function sitWithPlayer(targetUserId: string) {
     if (sharedSocket?.connected) {
       sharedSocket.emit('player:sitWith', { targetUserId });
@@ -604,6 +837,9 @@ export function useCafeSocket() {
     triggerCoffeeTogether,
     acceptCoffeeInvite,
     encouragePlayer,
+    throwCup,
+    throwCupDirection,
+    throwStraightForward,
     sitWithPlayer,
     capturePolaroidSnapshot,
     fetchAnonymousMessages,

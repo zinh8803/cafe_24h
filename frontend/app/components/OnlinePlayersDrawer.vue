@@ -69,6 +69,13 @@
           >
             ☕ Mời Đồ Uống
           </button>
+          <button
+            type="button"
+            class="interact-btn throw-btn"
+            @click="handleThrowCup(selectedPlayer.userId)"
+          >
+            🎯 Ném Ly
+          </button>
         </div>
 
         <div class="encourage-row">
@@ -122,15 +129,24 @@
                 <span v-if="p.drinkIcon"> • {{ p.drinkIcon }}</span>
               </div>
             </div>
-            <button
-              v-if="p.userId !== store.userId"
-              type="button"
-              class="quick-wave-btn"
-              title="Mời cà phê"
-              @click.stop="handleInviteCoffee(p.userId)"
-            >
-              ☕
-            </button>
+            <div v-if="p.userId !== store.userId" class="row-actions">
+              <button
+                type="button"
+                class="quick-wave-btn"
+                title="Mời cà phê"
+                @click.stop="handleInviteCoffee(p.userId)"
+              >
+                ☕
+              </button>
+              <button
+                type="button"
+                class="quick-wave-btn throw-mini"
+                title="Ném ly qua người này"
+                @click.stop="handleThrowCup(p.userId)"
+              >
+                🎯
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -149,6 +165,8 @@ const {
   triggerCoffeeTogether,
   acceptCoffeeInvite,
   encouragePlayer,
+  throwCup,
+  throwCupDirection,
   sitWithPlayer,
 } = useCafeSocket();
 
@@ -176,6 +194,15 @@ function handleSitWith(targetUserId: string) {
 
 function handleInviteCoffee(targetUserId: string) {
   triggerCoffeeTogether(targetUserId);
+}
+
+function handleThrowCup(targetUserId: string) {
+  const target = store.players.find((p) => p.userId === targetUserId);
+  if (target) {
+    throwCupDirection(target.x, target.y);
+  } else {
+    throwCup(targetUserId);
+  }
 }
 </script>
 
@@ -338,6 +365,17 @@ function handleInviteCoffee(targetUserId: string) {
   border-color: #fbbf24;
 }
 
+.interact-btn.throw-btn {
+  grid-column: span 2;
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+}
+
+.interact-btn.throw-btn:hover {
+  background: rgba(239, 68, 68, 0.32);
+}
+
 .encourage-row {
   display: flex;
   align-items: center;
@@ -484,6 +522,12 @@ function handleInviteCoffee(targetUserId: string) {
   font-weight: 600;
 }
 
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .quick-wave-btn {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -496,6 +540,11 @@ function handleInviteCoffee(targetUserId: string) {
 
 .quick-wave-btn:hover {
   background: #d4a373;
+}
+
+.quick-wave-btn.throw-mini:hover {
+  background: rgba(239, 68, 68, 0.45);
+  border-color: rgba(248, 113, 113, 0.65);
 }
 
 @media (max-width: 820px) {

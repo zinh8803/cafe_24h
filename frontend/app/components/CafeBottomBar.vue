@@ -50,6 +50,27 @@
           {{ store.currentDrinkConfig.icon }} Gọi Đồ Uống
         </button>
 
+        <div class="throw-group">
+          <button
+            type="button"
+            class="dock-btn throw-aim-btn"
+            :class="{ active: store.isAimingThrow }"
+            :title="store.isAimingThrow ? 'Nhấp để ném ngay phía trước, hoặc click chuột vào sàn quán' : 'Bật nhắm để ném ly có định hướng (Phím tắt: F hoặc click chuột phải)'"
+            @click="onThrowBtnClick"
+          >
+            🎯 {{ store.isAimingThrow ? 'Bấm Ném Ngay' : 'Ném Ly' }}
+          </button>
+          <button
+            v-if="store.isAimingThrow"
+            type="button"
+            class="cancel-aim-btn"
+            title="Huỷ chế độ nhắm (ESC)"
+            @click.stop="store.toggleAimThrow(false)"
+          >
+            ✕
+          </button>
+        </div>
+
         <button
           type="button"
           class="dock-btn"
@@ -110,6 +131,7 @@ const {
   sendEmote,
   triggerCoffeeTogether,
   fetchAnonymousMessages,
+  throwStraightForward,
 } = useCafeSocket();
 
 const draft = ref('');
@@ -139,6 +161,14 @@ function handleSend() {
   setTypingStatus(false);
   sendChatMessage(draft.value);
   draft.value = '';
+}
+
+function onThrowBtnClick() {
+  if (store.isAimingThrow) {
+    throwStraightForward();
+  } else {
+    store.toggleAimThrow(true);
+  }
 }
 
 function openBoard() {
@@ -275,6 +305,51 @@ function openBoard() {
 .highlight-drink {
   border-color: rgba(251, 191, 36, 0.5);
   color: #fef3c7;
+}
+
+.throw-aim-btn {
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+  transition: all 0.18s ease;
+}
+
+.throw-aim-btn:hover {
+  background: rgba(239, 68, 68, 0.28);
+  color: #fff;
+}
+
+.throw-aim-btn.active {
+  background: #dc2626;
+  color: #fff;
+  border-color: #f87171;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
+}
+
+.throw-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.cancel-aim-btn {
+  background: rgba(239, 68, 68, 0.45);
+  color: #fee2e2;
+  border: 1px solid rgba(248, 113, 113, 0.6);
+  border-radius: 8px;
+  width: 22px;
+  height: 28px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.cancel-aim-btn:hover {
+  background: #dc2626;
+  color: #fff;
 }
 
 .chat-form {

@@ -1,5 +1,5 @@
 <template>
-  <div class="phaser-stage-wrapper">
+  <div class="phaser-stage-wrapper" @contextmenu.prevent>
     <div ref="canvasHost" class="phaser-canvas-host" />
   </div>
 </template>

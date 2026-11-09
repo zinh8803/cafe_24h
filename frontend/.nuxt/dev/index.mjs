@@ -3,44 +3,44 @@ import { Server } from 'node:http';
 import { resolve, dirname, join } from 'node:path';
 import nodeCrypto from 'node:crypto';
 import { parentPort, threadId } from 'node:worker_threads';
-import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, createError, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, appendResponseHeader, getRequestURL, getResponseHeader, removeResponseHeader, getQuery as getQuery$1, getRequestWebStream, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getResponseStatus, getRouterParam, readBody, getResponseStatusText } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/h3/dist/index.mjs';
-import { escapeHtml } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/@vue/shared/dist/shared.cjs.js';
-import viteNodeEntry_mjs from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/@nuxt/vite-builder/dist/vite-node-entry.mjs';
-import { viteNodeFetch } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/@nuxt/vite-builder/dist/vite-node.mjs';
-import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/vue-bundle-renderer/dist/runtime.mjs';
-import { parseURL, withQuery, getQuery, withoutBase, joinURL, withTrailingSlash, decodePath, withLeadingSlash, withoutTrailingSlash, encodePath, joinRelativeURL } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/ufo/dist/index.mjs';
-import { renderToString } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/vue/server-renderer/index.mjs';
-import { klona } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/klona/dist/index.mjs';
-import defu, { defuFn } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/defu/dist/defu.mjs';
-import destr, { destr as destr$1 } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/destr/dist/index.mjs';
-import { snakeCase } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/scule/dist/index.mjs';
-import { createHead as createHead$1, propsToString, renderSSRHead } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/unhead/dist/server.mjs';
-import { stringify, uneval } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/devalue/index.js';
-import { isVNode, isRef, toValue } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/vue/index.mjs';
-import { DeprecationsPlugin, PromisesPlugin, TemplateParamsPlugin, AliasSortingPlugin } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/unhead/dist/plugins.mjs';
-import { createHooks } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/hookable/dist/index.mjs';
-import { createFetch, Headers as Headers$1 } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/ofetch/dist/node.mjs';
-import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/node-mock-http/dist/index.mjs';
-import { createStorage, prefixStorage } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/unstorage/dist/index.mjs';
-import unstorage_47drivers_47fs from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/unstorage/drivers/fs.mjs';
-import file_58_47_47_47C_58_47vinhnq_47cafe_24h_47frontend_47node_modules_47_64nuxt_47nitro_45server_47dist_47runtime_47utils_47cache_45driver_46js from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/@nuxt/nitro-server/dist/runtime/utils/cache-driver.js';
-import { digest, hash as hash$1 } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/ohash/dist/index.mjs';
-import { toRouteMatcher, createRouter } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/radix3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, createError, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, appendResponseHeader, getRequestURL, getResponseHeader, removeResponseHeader, getQuery as getQuery$1, getRequestWebStream, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getResponseStatus, getRouterParam, readBody, getResponseStatusText } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/h3/dist/index.mjs';
+import { escapeHtml } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/@vue/shared/dist/shared.cjs.js';
+import viteNodeEntry_mjs from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/@nuxt/vite-builder/dist/vite-node-entry.mjs';
+import { viteNodeFetch } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/@nuxt/vite-builder/dist/vite-node.mjs';
+import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/vue-bundle-renderer/dist/runtime.mjs';
+import { parseURL, withQuery, getQuery, withoutBase, joinURL, withTrailingSlash, decodePath, withLeadingSlash, withoutTrailingSlash, encodePath, joinRelativeURL } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/ufo/dist/index.mjs';
+import { renderToString } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/vue/server-renderer/index.mjs';
+import { klona } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/klona/dist/index.mjs';
+import defu, { defuFn } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/defu/dist/defu.mjs';
+import destr, { destr as destr$1 } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/destr/dist/index.mjs';
+import { snakeCase } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/scule/dist/index.mjs';
+import { createHead as createHead$1, propsToString, renderSSRHead } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/unhead/dist/server.mjs';
+import { stringify, uneval } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/devalue/index.js';
+import { isVNode, isRef, toValue } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/vue/index.mjs';
+import { DeprecationsPlugin, PromisesPlugin, TemplateParamsPlugin, AliasSortingPlugin } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/unhead/dist/plugins.mjs';
+import { createHooks } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/hookable/dist/index.mjs';
+import { createFetch, Headers as Headers$1 } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/ofetch/dist/node.mjs';
+import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/node-mock-http/dist/index.mjs';
+import { createStorage, prefixStorage } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/unstorage/dist/index.mjs';
+import unstorage_47drivers_47fs from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/unstorage/drivers/fs.mjs';
+import file_58_47_47_47D_58_47laragon_47www_47cafe_24h_47frontend_47node_modules_47_64nuxt_47nitro_45server_47dist_47runtime_47utils_47cache_45driver_46js from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/@nuxt/nitro-server/dist/runtime/utils/cache-driver.js';
+import { digest, hash as hash$1 } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/ohash/dist/index.mjs';
+import { toRouteMatcher, createRouter } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/radix3/dist/index.mjs';
 import { readFile } from 'node:fs/promises';
-import consola, { consola as consola$1 } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/consola/dist/index.mjs';
-import { ErrorParser } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/youch-core/build/index.js';
-import { Youch } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/youch/build/index.js';
-import { SourceMapConsumer } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/source-map/source-map.js';
+import consola, { consola as consola$1 } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/consola/dist/index.mjs';
+import { ErrorParser } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/youch-core/build/index.js';
+import { Youch } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/youch/build/index.js';
+import { SourceMapConsumer } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/source-map/source-map.js';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { getContext } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/unctx/dist/index.mjs';
-import { captureRawStackTrace, parseRawStackTrace } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/errx/dist/index.mjs';
-import _wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/@nuxt/vite-builder/dist/fix-stacktrace.mjs';
+import { getContext } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/unctx/dist/index.mjs';
+import { captureRawStackTrace, parseRawStackTrace } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/errx/dist/index.mjs';
+import _wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/@nuxt/vite-builder/dist/fix-stacktrace.mjs';
 import { promises } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname as dirname$1, resolve as resolve$1 } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/pathe/dist/index.mjs';
-import { walkResolver } from 'file://C:/vinhnq/cafe_24h/frontend/node_modules/unhead/dist/utils.mjs';
+import { dirname as dirname$1, resolve as resolve$1 } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/pathe/dist/index.mjs';
+import { walkResolver } from 'file://D:/laragon/www/cafe_24h/frontend/node_modules/unhead/dist/utils.mjs';
 
-const serverAssets = [{"baseName":"server","dir":"C:/vinhnq/cafe_24h/frontend/app/server/assets"}];
+const serverAssets = [{"baseName":"server","dir":"D:/laragon/www/cafe_24h/frontend/app/server/assets"}];
 
 const assets$1 = createStorage();
 
@@ -52,12 +52,12 @@ const storage = createStorage({});
 
 storage.mount('/assets', assets$1);
 
-storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"C:/vinhnq/cafe_24h/frontend","watchOptions":{"ignored":[null]}}));
-storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"C:/vinhnq/cafe_24h/frontend/app/server","watchOptions":{"ignored":[null]}}));
-storage.mount('cache:nuxt:payload', file_58_47_47_47C_58_47vinhnq_47cafe_24h_47frontend_47node_modules_47_64nuxt_47nitro_45server_47dist_47runtime_47utils_47cache_45driver_46js({"driver":"file:///C:/vinhnq/cafe_24h/frontend/node_modules/@nuxt/nitro-server/dist/runtime/utils/cache-driver.js","base":"C:/vinhnq/cafe_24h/frontend/.nuxt/cache/nuxt/payload"}));
-storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"C:/vinhnq/cafe_24h/frontend/.nuxt"}));
-storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"C:/vinhnq/cafe_24h/frontend/.nuxt/cache"}));
-storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"C:/vinhnq/cafe_24h/frontend/.data/kv"}));
+storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"D:/laragon/www/cafe_24h/frontend","watchOptions":{"ignored":[null]}}));
+storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"D:/laragon/www/cafe_24h/frontend/app/server","watchOptions":{"ignored":[null]}}));
+storage.mount('cache:nuxt:payload', file_58_47_47_47D_58_47laragon_47www_47cafe_24h_47frontend_47node_modules_47_64nuxt_47nitro_45server_47dist_47runtime_47utils_47cache_45driver_46js({"driver":"file:///D:/laragon/www/cafe_24h/frontend/node_modules/@nuxt/nitro-server/dist/runtime/utils/cache-driver.js","base":"D:/laragon/www/cafe_24h/frontend/.nuxt/cache/nuxt/payload"}));
+storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"D:/laragon/www/cafe_24h/frontend/.nuxt"}));
+storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"D:/laragon/www/cafe_24h/frontend/.nuxt/cache"}));
+storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"D:/laragon/www/cafe_24h/frontend/.data/kv"}));
 
 function useStorage(base = "") {
   return base ? prefixStorage(storage, base) : storage;
@@ -2239,13 +2239,13 @@ if (!window.__NUXT_DEVTOOLS_TIME_METRIC__) {
 window.__NUXT_DEVTOOLS_TIME_METRIC__.appInit = Date.now()
 `;
 
-const _ZmNHw3C8Tx7qGAUQtVhgbjtCy1gNyFzir3nM4fMEY3E = (function(nitro) {
+const _0SHSE57lBNK8pxO_2JbN1EDfjsFZmZU2dNzH1YqYnA = (function(nitro) {
   nitro.hooks.hook("render:html", (htmlContext) => {
     htmlContext.head.push(`<script>${script}<\/script>`);
   });
 });
 
-const rootDir = "C:/vinhnq/cafe_24h/frontend";
+const rootDir = "D:/laragon/www/cafe_24h/frontend";
 
 const appHead = {"meta":[{"charset":"utf-8"},{"name":"viewport","content":"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"},{"name":"description","content":"Quán cà phê ảo hoạt động 24/7 trên trình duyệt. Chọn bàn cạnh cửa sổ, gọi một ly cà phê sữa đá, lắng nghe tiếng mưa và trò chuyện cùng những người đang thức."}],"link":[{"rel":"preconnect","href":"https://fonts.googleapis.com"},{"rel":"preconnect","href":"https://fonts.gstatic.com","crossorigin":""},{"rel":"stylesheet","href":"https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"}],"style":[],"script":[],"noscript":[],"title":"24h Café — A little place to slow down","htmlAttrs":{"lang":"vi"}};
 
@@ -2271,7 +2271,7 @@ const asyncContext = getContext("nuxt-dev", {
 	asyncContext: true,
 	AsyncLocalStorage
 });
-const _E1ZGQAdpLHT2nyAaXfwMSM6HeCIYGBPA2JT_UirWTOM = (nitroApp) => {
+const _5zW5BCzcG8USo9fGR8Yqx1BbXCGVnkh7LtJkSkXBpEA = (nitroApp) => {
 	const handler = nitroApp.h3App.handler;
 	nitroApp.h3App.handler = (event) => {
 		return asyncContext.callAsync({
@@ -2347,8 +2347,8 @@ function onConsoleLog(callback) {
 }
 
 const plugins = [
-  _ZmNHw3C8Tx7qGAUQtVhgbjtCy1gNyFzir3nM4fMEY3E,
-_E1ZGQAdpLHT2nyAaXfwMSM6HeCIYGBPA2JT_UirWTOM,
+  _0SHSE57lBNK8pxO_2JbN1EDfjsFZmZU2dNzH1YqYnA,
+_5zW5BCzcG8USo9fGR8Yqx1BbXCGVnkh7LtJkSkXBpEA,
 _wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw
 ];
 
@@ -2381,7 +2381,7 @@ function getAsset (id) {
 
 const METHODS = /* @__PURE__ */ new Set(["HEAD", "GET"]);
 const EncodingMap = { gzip: ".gz", br: ".br" };
-const _5MWTjv = eventHandler((event) => {
+const _NZposs = eventHandler((event) => {
   if (event.method && !METHODS.has(event.method)) {
     return;
   }
@@ -3026,13 +3026,13 @@ async function getIslandContext(event) {
 	};
 }
 
-const _lazy_G_aU3O = () => Promise.resolve().then(function () { return renderer; });
+const _lazy_Cb1ZXK = () => Promise.resolve().then(function () { return renderer; });
 
 const handlers = [
-  { route: '', handler: _5MWTjv, lazy: false, middleware: true, method: undefined },
-  { route: '/__nuxt_error', handler: _lazy_G_aU3O, lazy: true, middleware: false, method: undefined },
+  { route: '', handler: _NZposs, lazy: false, middleware: true, method: undefined },
+  { route: '/__nuxt_error', handler: _lazy_Cb1ZXK, lazy: true, middleware: false, method: undefined },
   { route: '/__nuxt_island/**', handler: handler$1, lazy: false, middleware: false, method: undefined },
-  { route: '/**', handler: _lazy_G_aU3O, lazy: true, middleware: false, method: undefined }
+  { route: '/**', handler: _lazy_Cb1ZXK, lazy: true, middleware: false, method: undefined }
 ];
 
 function createNitroApp() {

@@ -73,12 +73,38 @@ type EventMap = {
     drinkIcon: string;
     drinkName: string;
   };
+  'scene:cupThrown': {
+    fromUserId: string;
+    fromNickname: string;
+    toUserId: string;
+    toNickname: string;
+    drinkIcon: string;
+    drinkName: string;
+    dodged?: boolean;
+  };
+  'scene:cupThrownDirection': {
+    fromUserId: string;
+    fromNickname: string;
+    startX: number;
+    startY: number;
+    targetX: number;
+    targetY: number;
+    hitUserId: string | null;
+    hitNickname: string | null;
+    dodged: boolean;
+    drinkIcon: string;
+    drinkName: string;
+  };
+  'scene:aimMode': { isAiming: boolean };
   'scene:joystickInput': { vx: number; vy: number };
   'scene:requestSnapshot': { quote: string; moodLabel: string; nickname: string };
 
   // Phaser Scene -> Store / UI
   'client:ready': Record<string, never>;
   'client:move': { x: number; y: number; direction: 'up' | 'down' | 'left' | 'right' };
+  'client:throwDirection': { targetX: number; targetY: number };
+  'client:aimModeChanged': { isAiming: boolean };
+  'client:toggleAim': Record<string, never>;
   'client:sit': { seatId: string };
   'client:stand': Record<string, never>;
   'client:selectPlayer': { userId: string };

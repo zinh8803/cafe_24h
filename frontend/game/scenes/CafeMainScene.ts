@@ -43,6 +43,10 @@ export class CafeMainScene extends Phaser.Scene {
   private rainDrops: RainDrop[] = [];
   private unsubscribers: Array<() => void> = [];
 
+  private isAimingThrow = false;
+  private aimGuideGraphics!: Phaser.GameObjects.Graphics;
+  private aimReticleText!: Phaser.GameObjects.Text;
+
   // Furniture obstacle rectangles for collision checks
   private readonly obstacles: Array<{ x: number; y: number; w: number; h: number }> = [
     // Coffee Bar counter
@@ -72,6 +76,12 @@ export class CafeMainScene extends Phaser.Scene {
     this.createInteractiveProps();
     this.createSeats();
     this.createLightingAndWeather();
+    this.aimGuideGraphics = this.add.graphics().setDepth(9100);
+    this.aimReticleText = this.add
+      .text(0, 0, '🎯', { fontSize: '20px' })
+      .setOrigin(0.5)
+      .setDepth(9101)
+      .setVisible(false);
     this.setupControls();
     this.bindNetworkEvents();
 
@@ -245,7 +255,12 @@ export class CafeMainScene extends Phaser.Scene {
     const barZone = this.add
       .zone(570, 150, 330, 75)
       .setInteractive({ useHandCursor: true });
-    barZone.on('pointerdown', () => {
+    barZone.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (this.isAimingThrow || pointer.rightButtonDown()) {
+        pointer.event.stopPropagation();
+        this.handleAimThrow(pointer.worldX, pointer.worldY);
+        return;
+      }
       gameEventBus.emit('client:openDrinkMenu', {});
     });
 
@@ -279,7 +294,12 @@ export class CafeMainScene extends Phaser.Scene {
     const boardZone = this.add
       .zone(315, 67, 140, 72)
       .setInteractive({ useHandCursor: true });
-    boardZone.on('pointerdown', () => {
+    boardZone.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (this.isAimingThrow || pointer.rightButtonDown()) {
+        pointer.event.stopPropagation();
+        this.handleAimThrow(pointer.worldX, pointer.worldY);
+        return;
+      }
       gameEventBus.emit('client:openMessageBoard', {});
     });
 
@@ -324,6 +344,11 @@ export class CafeMainScene extends Phaser.Scene {
         this.refreshSeatStyles();
       });
       cushion.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        if (this.isAimingThrow || pointer.rightButtonDown()) {
+          pointer.event.stopPropagation();
+          this.handleAimThrow(pointer.worldX, pointer.worldY);
+          return;
+        }
         pointer.event.stopPropagation();
         this.handleSeatClick(seat);
       });
@@ -419,6 +444,10 @@ export class CafeMainScene extends Phaser.Scene {
   }
 
   private setupControls() {
+    if (this.input.mouse) {
+      this.input.mouse.disableContextMenu();
+    }
+
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       // Do not capture SPACE or keys when user is typing in an <input>
@@ -429,16 +458,49 @@ export class CafeMainScene extends Phaser.Scene {
         S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
         D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
       };
+
+      this.input.keyboard.on('keydown-F', () => {
+        if (this.isTypingInDomInput()) return;
+        gameEventBus.emit('client:toggleAim', {});
+      });
+
+      this.input.keyboard.on('keydown-ESC', () => {
+        if (this.isAimingThrow) {
+          this.isAimingThrow = false;
+          this.aimGuideGraphics.clear();
+          this.aimReticleText.setVisible(false);
+          gameEventBus.emit('client:aimModeChanged', { isAiming: false });
+        }
+      });
     }
 
-    // Click on floor to walk
+    // Click on floor to walk or throw cup if right-click / aim mode active
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.rightButtonDown() || this.isAimingThrow) {
+        this.handleAimThrow(pointer.worldX, pointer.worldY);
+        return;
+      }
+
       if (pointer.worldY < 118) return;
       this.walkTarget = {
         x: Phaser.Math.Clamp(pointer.worldX, 75, 1125),
         y: Phaser.Math.Clamp(pointer.worldY, 128, 720),
       };
     });
+  }
+
+  public isAiming(): boolean {
+    return this.isAimingThrow;
+  }
+
+  public handleAimThrow(targetX: number, targetY: number) {
+    const clampedX = Phaser.Math.Clamp(targetX, 60, 1140);
+    const clampedY = Phaser.Math.Clamp(targetY, 118, 730);
+    this.isAimingThrow = false;
+    this.aimGuideGraphics.clear();
+    this.aimReticleText.setVisible(false);
+    gameEventBus.emit('client:aimModeChanged', { isAiming: false });
+    gameEventBus.emit('client:throwDirection', { targetX: clampedX, targetY: clampedY });
   }
 
   private bindNetworkEvents() {
@@ -562,6 +624,22 @@ export class CafeMainScene extends Phaser.Scene {
         }
       }),
 
+      gameEventBus.on('scene:cupThrown', ({ fromUserId, toUserId, drinkIcon, dodged }) => {
+        this.animateCupThrow(fromUserId, toUserId, drinkIcon || '☕', Boolean(dodged));
+      }),
+
+      gameEventBus.on('scene:aimMode', ({ isAiming }) => {
+        this.isAimingThrow = isAiming;
+        if (!isAiming) {
+          this.aimGuideGraphics.clear();
+          this.aimReticleText.setVisible(false);
+        }
+      }),
+
+      gameEventBus.on('scene:cupThrownDirection', (payload) => {
+        this.animateDirectionalCupThrow(payload);
+      }),
+
       gameEventBus.on('scene:joystickInput', ({ vx, vy }) => {
         this.joystickVec = { vx, vy };
       }),
@@ -597,6 +675,77 @@ export class CafeMainScene extends Phaser.Scene {
     this.avatars.set(state.userId, created);
   }
 
+  private animateCupThrow(
+    fromUserId: string,
+    toUserId: string,
+    drinkIcon: string,
+    dodged = false,
+  ) {
+    const fromAv = this.avatars.get(fromUserId);
+    const toAv = this.avatars.get(toUserId);
+    if (!fromAv || !toAv) return;
+
+    const startX = fromAv.container.x;
+    const startY = fromAv.container.y - 18;
+    const dx = toAv.container.x - startX;
+    const dy = toAv.container.y - startY;
+
+    // Face thrower toward target
+    if (Math.abs(dx) > Math.abs(dy)) {
+      fromAv.state.direction = dx < 0 ? 'left' : 'right';
+    } else {
+      fromAv.state.direction = dy < 0 ? 'up' : 'down';
+    }
+    fromAv.redrawCharacter();
+
+    const cupProjectile = this.add
+      .text(startX, startY, drinkIcon, {
+        fontFamily: '"Plus Jakarta Sans", sans-serif',
+        fontSize: '24px',
+      })
+      .setOrigin(0.5)
+      .setDepth(9200);
+
+    let dodgeTriggered = false;
+    const progress = { t: 0 };
+    this.tweens.add({
+      targets: progress,
+      t: 1,
+      duration: 520,
+      ease: 'Sine.easeInOut',
+      onUpdate: () => {
+        const t = progress.t;
+        const endX = toAv.container.x + (dodged ? 26 : 0);
+        const endY = toAv.container.y - 18 + (dodged ? 14 : 0);
+        const curX = Phaser.Math.Linear(startX, endX, t);
+        const arcOffset = Math.sin(t * Math.PI) * -68;
+        const curY = Phaser.Math.Linear(startY, endY, t) + arcOffset;
+        cupProjectile.setPosition(curX, curY);
+        cupProjectile.setRotation(t * Math.PI * 4);
+
+        if (dodged && !dodgeTriggered && t >= 0.72) {
+          dodgeTriggered = true;
+          toAv.playDodgeReaction('Né đẹp! Hụt rồi nhé 😜');
+        }
+      },
+      onComplete: () => {
+        if (dodged) {
+          this.tweens.add({
+            targets: cupProjectile,
+            alpha: 0,
+            scaleX: 0.6,
+            scaleY: 0.6,
+            duration: 220,
+            onComplete: () => cupProjectile.destroy(),
+          });
+        } else {
+          cupProjectile.destroy();
+          toAv.playHitReaction('Đau quá!');
+        }
+      },
+    });
+  }
+
   private isTypingInDomInput(): boolean {
     if (typeof document === 'undefined') return false;
     const tag = document.activeElement?.tagName?.toLowerCase();
@@ -623,10 +772,161 @@ export class CafeMainScene extends Phaser.Scene {
 
   override update(_time: number, delta: number) {
     this.updateSelfMovement(delta);
+    this.updateAimGuide();
     for (const avatar of this.avatars.values()) {
       avatar.update(delta);
     }
     this.updateRainAnimation(delta);
+  }
+
+  private updateAimGuide() {
+    if (!this.isAimingThrow) return;
+    const selfAv = this.avatars.get(this.selfUserId);
+    const ptr = this.input.activePointer;
+    if (!selfAv || !ptr) return;
+
+    const sx = selfAv.container.x;
+    const sy = selfAv.container.y - 18;
+    const tx = Phaser.Math.Clamp(ptr.worldX, 60, 1140);
+    const ty = Phaser.Math.Clamp(ptr.worldY, 118, 730);
+
+    const dx = tx - sx;
+    const dy = ty - sy;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      selfAv.state.direction = dx < 0 ? 'left' : 'right';
+    } else {
+      selfAv.state.direction = dy < 0 ? 'up' : 'down';
+    }
+    selfAv.redrawCharacter();
+
+    this.aimGuideGraphics.clear();
+    this.aimGuideGraphics.lineStyle(2, 0xf59e0b, 0.85);
+
+    const steps = 16;
+    for (let i = 0; i < steps; i += 2) {
+      const x1 = Phaser.Math.Linear(sx, tx, i / steps);
+      const y1 = Phaser.Math.Linear(sy, ty, i / steps);
+      const x2 = Phaser.Math.Linear(sx, tx, (i + 1) / steps);
+      const y2 = Phaser.Math.Linear(sy, ty, (i + 1) / steps);
+      this.aimGuideGraphics.lineBetween(x1, y1, x2, y2);
+    }
+
+    this.aimGuideGraphics.lineStyle(2, 0xfef08a, 0.9);
+    this.aimGuideGraphics.strokeCircle(tx, ty, 18);
+    this.aimReticleText.setPosition(tx, ty).setVisible(true);
+  }
+
+  private animateDirectionalCupThrow(payload: {
+    fromUserId: string;
+    fromNickname: string;
+    startX: number;
+    startY: number;
+    targetX: number;
+    targetY: number;
+    hitUserId: string | null;
+    hitNickname: string | null;
+    dodged: boolean;
+    drinkIcon: string;
+    drinkName: string;
+  }) {
+    const fromAv = this.avatars.get(payload.fromUserId);
+    const startX = fromAv ? fromAv.container.x : payload.startX;
+    const startY = fromAv ? fromAv.container.y - 18 : payload.startY;
+
+    const endX = payload.targetX;
+    const endY = payload.targetY;
+    const dx = endX - startX;
+    const dy = endY - startY;
+
+    if (fromAv) {
+      if (Math.abs(dx) > Math.abs(dy)) {
+        fromAv.state.direction = dx < 0 ? 'left' : 'right';
+      } else {
+        fromAv.state.direction = dy < 0 ? 'up' : 'down';
+      }
+      fromAv.redrawCharacter();
+      fromAv.playFloatingEmote('🎯');
+    }
+
+    const cupProjectile = this.add
+      .text(startX, startY, payload.drinkIcon || '☕', {
+        fontFamily: '"Plus Jakarta Sans", sans-serif',
+        fontSize: '24px',
+      })
+      .setOrigin(0.5)
+      .setDepth(9200);
+
+    const hitAv = payload.hitUserId ? this.avatars.get(payload.hitUserId) : null;
+    let dodgeTriggered = false;
+    const progress = { t: 0 };
+    const flightDist = Math.hypot(dx, dy);
+    const duration = Phaser.Math.Clamp(flightDist * 1.2, 380, 680);
+
+    this.tweens.add({
+      targets: progress,
+      t: 1,
+      duration,
+      ease: 'Sine.easeInOut',
+      onUpdate: () => {
+        const t = progress.t;
+        const curX = Phaser.Math.Linear(startX, endX, t);
+        const arcHeight = Math.min(100, Math.max(35, flightDist * 0.22));
+        const arcOffset = Math.sin(t * Math.PI) * -arcHeight;
+        const curY = Phaser.Math.Linear(startY, endY, t) + arcOffset;
+
+        cupProjectile.setPosition(curX, curY);
+        cupProjectile.setRotation(t * Math.PI * 6);
+
+        if (payload.dodged && hitAv && !dodgeTriggered && t >= 0.7) {
+          dodgeTriggered = true;
+          hitAv.playDodgeReaction('Né đẹp! Hụt rồi nhé 😜');
+        }
+      },
+      onComplete: () => {
+        cupProjectile.destroy();
+
+        if (payload.hitUserId && hitAv) {
+          if (payload.dodged) {
+            this.createShatterSplash(endX + (dx >= 0 ? 25 : -25), endY);
+          } else {
+            hitAv.playHitReaction('Đau quá!');
+          }
+        } else {
+          this.createShatterSplash(endX, endY);
+        }
+      },
+    });
+  }
+
+  private createShatterSplash(x: number, y: number) {
+    const splashText = this.add
+      .text(x, y - 8, '💥💦', {
+        fontSize: '18px',
+      })
+      .setOrigin(0.5)
+      .setDepth(9150);
+
+    const floorPuddle = this.add
+      .ellipse(x, y + 4, 28, 12, 0x4a301c, 0.75)
+      .setDepth(y - 5);
+
+    this.tweens.add({
+      targets: splashText,
+      y: splashText.y - 18,
+      alpha: 0,
+      scaleX: 1.3,
+      scaleY: 1.3,
+      duration: 700,
+      onComplete: () => splashText.destroy(),
+    });
+
+    this.tweens.add({
+      targets: floorPuddle,
+      alpha: 0,
+      delay: 2200,
+      duration: 1200,
+      onComplete: () => floorPuddle.destroy(),
+    });
   }
 
   private updateSelfMovement(delta: number) {

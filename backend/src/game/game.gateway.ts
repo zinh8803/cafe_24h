@@ -362,6 +362,147 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @SubscribeMessage('cup:throw')
+  handleCupThrow(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { targetUserId: string },
+  ) {
+    const ctx = this.gameService.getPlayerContext(client.id);
+    if (!ctx || !payload?.targetUserId) return;
+
+    const target = this.gameService.findPlayerInRoomByUserId(ctx.room.id, payload.targetUserId);
+    if (!target || target.userId === ctx.player.userId) return;
+
+    const drinkIcon = ctx.player.drinkIcon || '☕';
+    const drinkName = ctx.player.drinkName || 'Cà Phê Sữa Đá';
+    const dodged = Math.random() < 0.4;
+
+    this.server.to(ctx.room.id).emit('cup:thrown', {
+      fromUserId: ctx.player.userId,
+      fromNickname: ctx.player.nickname,
+      toUserId: target.userId,
+      toNickname: target.nickname,
+      drinkIcon,
+      drinkName,
+      dodged,
+    });
+  }
+
+  @SubscribeMessage('cup:throwDirection')
+  handleCupThrowDirection(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { targetX: number; targetY: number },
+  ) {
+    const ctx = this.gameService.getPlayerContext(client.id);
+    if (!ctx) return;
+
+    const fromPlayer = ctx.player;
+    const startX = fromPlayer.x;
+    const startY = fromPlayer.y;
+    let targetX = Number(payload?.targetX);
+    let targetY = Number(payload?.targetY);
+
+    if (isNaN(targetX) || isNaN(targetY)) return;
+
+    const dx = targetX - startX;
+    const dy = targetY - startY;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 10) return;
+
+    // Limit maximum throw range to 600px
+    const maxRange = 600;
+    if (dist > maxRange) {
+      targetX = startX + (dx / dist) * maxRange;
+      targetY = startY + (dy / dist) * maxRange;
+    }
+
+    // Check collision along the throw ray
+    let bestHit: { player: any; t: number; dist: number } | null = null;
+    const hitRadius = 38;
+
+    for (const otherPlayer of ctx.room.players.values()) {
+      if (otherPlayer.userId === fromPlayer.userId) continue;
+
+      const seg = this.distToSegment(
+        otherPlayer.x,
+        otherPlayer.y,
+        startX,
+        startY,
+        targetX,
+        targetY,
+      );
+
+      if (seg.t > 0.04 && seg.t <= 1.0 && seg.dist <= hitRadius) {
+        if (!bestHit || seg.t < bestHit.t) {
+          bestHit = { player: otherPlayer, t: seg.t, dist: seg.dist };
+        }
+      }
+    }
+
+    const drinkIcon = fromPlayer.drinkIcon || '☕';
+    const drinkName = fromPlayer.drinkName || 'Cà Phê Sữa Đá';
+
+    if (bestHit) {
+      const target = bestHit.player;
+      const dodged = Math.random() < 0.4;
+      this.server.to(ctx.room.id).emit('cup:thrownDirection', {
+        fromUserId: fromPlayer.userId,
+        fromNickname: fromPlayer.nickname,
+        startX,
+        startY,
+        targetX: target.x,
+        targetY: target.y,
+        hitUserId: target.userId,
+        hitNickname: target.nickname,
+        dodged,
+        drinkIcon,
+        drinkName,
+      });
+      this.server.to(ctx.room.id).emit('cup:thrown', {
+        fromUserId: fromPlayer.userId,
+        fromNickname: fromPlayer.nickname,
+        toUserId: target.userId,
+        toNickname: target.nickname,
+        drinkIcon,
+        drinkName,
+        dodged,
+      });
+    } else {
+      this.server.to(ctx.room.id).emit('cup:thrownDirection', {
+        fromUserId: fromPlayer.userId,
+        fromNickname: fromPlayer.nickname,
+        startX,
+        startY,
+        targetX: Math.round(targetX),
+        targetY: Math.round(targetY),
+        hitUserId: null,
+        hitNickname: null,
+        dodged: false,
+        drinkIcon,
+        drinkName,
+      });
+    }
+  }
+
+  private distToSegment(
+    px: number,
+    py: number,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+  ): { dist: number; t: number } {
+    const l2 = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+    if (l2 === 0) {
+      return { dist: Math.hypot(px - x1, py - y1), t: 0 };
+    }
+    let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    const projX = x1 + t * (x2 - x1);
+    const projY = y1 + t * (y2 - y1);
+    return { dist: Math.hypot(px - projX, py - projY), t };
+  }
+
   @SubscribeMessage('chat:typing')
   handleChatTyping(
     @ConnectedSocket() client: Socket,
