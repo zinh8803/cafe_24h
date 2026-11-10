@@ -2,6 +2,15 @@
 node_modules/
 backend/node_modules/
 frontend/node_modules/
+.pnpm-store/
+
+# Nuxt 3 & Nitro build outputs & dev cache
+.nuxt/
+frontend/.nuxt/
+.output/
+frontend/.output/
+.nitro/
+frontend/.nitro/
 
 # Build outputs
 dist/
@@ -10,6 +19,12 @@ backend/dist/
 frontend/dist/
 *.tsbuildinfo
 .vite/
+frontend/.vite/
+
+# Coverage & testing
+coverage/
+*.lcov
+.nyc_output/
 
 # Environment variables (giữ lại .env.example)
 .env
@@ -44,5 +59,8 @@ Thumbs.db
 *.swp
 *.swo
 
-graphify-out
-.agents
+# Temp & AI tools
+.cache/
+.temp/
+graphify-out/
+.agents/

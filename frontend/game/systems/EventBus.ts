@@ -16,7 +16,9 @@ export interface PlayerNetState {
   drinkIcon: string | null;
   drinkName: string | null;
   isTyping?: boolean;
+  isStudying?: boolean;
   isNpc?: boolean;
+  floor?: 'ground' | 'rooftop';
   statusBubble?: string;
 }
 
@@ -37,6 +39,7 @@ type EventMap = {
     direction: 'up' | 'down' | 'left' | 'right';
     seatId: string | null;
     freedSeatId?: string | null;
+    floor?: 'ground' | 'rooftop';
   };
   'scene:playerSat': {
     userId: string;
@@ -52,6 +55,21 @@ type EventMap = {
     drinkId: string;
     drinkIcon: string;
     drinkName: string;
+  };
+  'scene:baristaOrder': {
+    orderId: string;
+    userId: string;
+    userNickname: string;
+    targetX: number;
+    targetY: number;
+    seatId: string | null;
+    drinkId: string;
+    drinkIcon: string;
+    drinkName: string;
+  };
+  'scene:playerStudyChanged': {
+    userId: string;
+    isStudying: boolean;
   };
   'scene:playerUpdated': {
     userId: string;
@@ -101,7 +119,8 @@ type EventMap = {
 
   // Phaser Scene -> Store / UI
   'client:ready': Record<string, never>;
-  'client:move': { x: number; y: number; direction: 'up' | 'down' | 'left' | 'right' };
+  'client:move': { x: number; y: number; direction: 'up' | 'down' | 'left' | 'right'; floor?: 'ground' | 'rooftop' };
+  'client:floorChanged': { floor: 'ground' | 'rooftop' };
   'client:throwDirection': { targetX: number; targetY: number };
   'client:aimModeChanged': { isAiming: boolean };
   'client:toggleAim': Record<string, never>;

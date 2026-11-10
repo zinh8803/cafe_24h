@@ -36,6 +36,7 @@
               <div class="p-name">
                 {{ selectedPlayer.nickname }}
                 <span v-if="selectedPlayer.isNpc" class="npc-tag">NPC</span>
+                <span v-if="selectedPlayer.isStudying" class="study-badge">📚 Đang học bài</span>
               </div>
               <div class="p-sub">
                 {{ getMoodLabel(selectedPlayer.mood) }}
@@ -72,9 +73,12 @@
           <button
             type="button"
             class="interact-btn throw-btn"
+            :class="{ disabled: selectedPlayer.isStudying }"
+            :disabled="selectedPlayer.isStudying"
+            :title="selectedPlayer.isStudying ? 'Người này đang học bài 📚, miễn nhiễm với ném ly!' : 'Ném ly'"
             @click="handleThrowCup(selectedPlayer.userId)"
           >
-            🎯 Ném Ly
+            🎯 {{ selectedPlayer.isStudying ? 'Miễn Nhiễm 📚' : 'Ném Ly' }}
           </button>
         </div>
 
@@ -124,6 +128,8 @@
               </div>
               <div class="row-meta">
                 <span v-if="p.isTyping" class="typing-text">💬 đang gõ...</span>
+                <span v-else-if="p.isStudying" class="study-text">📚 Đang học bài</span>
+                <span v-else-if="p.floor === 'rooftop'" class="rooftop-text">🪜 Sân Thượng</span>
                 <span v-else-if="p.seatId">🪑 Ghế {{ p.seatId }}</span>
                 <span v-else>🚶 Đang dạo quán</span>
                 <span v-if="p.drinkIcon"> • {{ p.drinkIcon }}</span>
@@ -141,10 +147,10 @@
               <button
                 type="button"
                 class="quick-wave-btn throw-mini"
-                title="Ném ly qua người này"
-                @click.stop="handleThrowCup(p.userId)"
+                :title="p.isStudying ? 'Đang học bài (Miễn nhiễm ném ly)' : 'Ném ly qua người này'"
+                @click.stop="p.isStudying ? store.showToast(`${p.nickname} đang tập trung học bài 📚, không thể ném ly!`) : handleThrowCup(p.userId)"
               >
-                🎯
+                {{ p.isStudying ? '🛡️' : '🎯' }}
               </button>
             </div>
           </div>
@@ -325,6 +331,28 @@ function handleThrowCup(targetUserId: string) {
   color: #fde68a;
   padding: 1px 6px;
   border-radius: 999px;
+}
+
+.study-badge {
+  font-size: 10px;
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.study-text {
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.interact-btn.disabled,
+.interact-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
 }
 
 .p-sub {

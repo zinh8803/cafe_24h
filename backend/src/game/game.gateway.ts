@@ -105,7 +105,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handlePlayerMove(
     @ConnectedSocket() client: Socket,
     @MessageBody()
-    payload: { x: number; y: number; direction?: 'up' | 'down' | 'left' | 'right' },
+    payload: { x: number; y: number; direction?: 'up' | 'down' | 'left' | 'right'; floor?: 'ground' | 'rooftop' },
   ) {
     const moved = this.gameService.movePlayer(client.id, payload);
     if (!moved) return;
@@ -117,6 +117,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       direction: moved.player.direction,
       seatId: null,
       freedSeatId: moved.freedSeatId,
+      floor: moved.player.floor || 'ground',
     });
   }
 
@@ -212,11 +213,38 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const res = this.gameService.orderDrink(client.id, payload?.drinkId);
     if (!res) return;
 
+    // Broadcast order to room so Barista NPC prepares and delivers
+    this.server.to(res.roomId).emit('barista:order', {
+      orderId: `ord_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      userId: res.player.userId,
+      userNickname: res.player.nickname,
+      targetX: res.player.x,
+      targetY: res.player.y,
+      seatId: res.player.seatId,
+      drinkId: res.player.drinkId,
+      drinkIcon: res.player.drinkIcon,
+      drinkName: res.player.drinkName,
+    });
+
     this.server.to(res.roomId).emit('player:drank', {
       userId: res.player.userId,
       drinkId: res.player.drinkId,
       drinkIcon: res.player.drinkIcon,
       drinkName: res.player.drinkName,
+    });
+  }
+
+  @SubscribeMessage('player:study')
+  handlePlayerStudy(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { isStudying: boolean },
+  ) {
+    const res = this.gameService.setPlayerStudy(client.id, Boolean(payload?.isStudying));
+    if (!res) return;
+
+    this.server.to(res.roomId).emit('player:studyChanged', {
+      userId: res.userId,
+      isStudying: res.isStudying,
     });
   }
 
@@ -373,6 +401,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const target = this.gameService.findPlayerInRoomByUserId(ctx.room.id, payload.targetUserId);
     if (!target || target.userId === ctx.player.userId) return;
 
+    if (target.isStudying) {
+      client.emit('game:notice', {
+        message: `${target.nickname} đang bật chế độ học bài 📚, không thể ném ly vào bạn ấy nhé!`,
+      });
+      return;
+    }
+
     const drinkIcon = ctx.player.drinkIcon || '☕';
     const drinkName = ctx.player.drinkName || 'Cà Phê Sữa Đá';
     const dodged = Math.random() < 0.4;
@@ -422,6 +457,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     for (const otherPlayer of ctx.room.players.values()) {
       if (otherPlayer.userId === fromPlayer.userId) continue;
+      if (otherPlayer.isStudying) continue; // Immune to flying cups while studying!
 
       const seg = this.distToSegment(
         otherPlayer.x,

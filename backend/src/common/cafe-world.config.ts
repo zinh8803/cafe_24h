@@ -2,7 +2,7 @@ export type WorldCycle = 'morning' | 'rainy' | 'sunset' | 'midnight';
 
 export interface SeatDefinition {
   id: string;
-  zone: 'Main Hall' | 'Window Seats' | 'Coffee Bar' | 'Quiet Corner' | 'Garden';
+  zone: 'Main Hall' | 'Window Seats' | 'Coffee Bar' | 'Quiet Corner' | 'Garden' | 'Sân Thượng';
   tableId: string;
   x: number;
   y: number;
@@ -60,6 +60,16 @@ export const CAFE_SEATS: SeatDefinition[] = [
   { id: 'garden_1b', zone: 'Garden', tableId: 'tbl_garden_1', x: 1010, y: 530, direction: 'left' },
   { id: 'garden_2a', zone: 'Garden', tableId: 'tbl_garden_2', x: 890, y: 655, direction: 'right' },
   { id: 'garden_2b', zone: 'Garden', tableId: 'tbl_garden_2', x: 1010, y: 655, direction: 'left' },
+
+  // Sân Thượng (Rooftop Open-Air Deck: toạ độ tầng trên y < 0)
+  { id: 'roof_sky_1', zone: 'Sân Thượng', tableId: 'tbl_roof_sky', x: 530, y: -460, direction: 'up' },
+  { id: 'roof_sky_2', zone: 'Sân Thượng', tableId: 'tbl_roof_sky', x: 650, y: -460, direction: 'up' },
+  { id: 'roof_lounge_1a', zone: 'Sân Thượng', tableId: 'tbl_roof_lounge', x: 880, y: -340, direction: 'right' },
+  { id: 'roof_lounge_1b', zone: 'Sân Thượng', tableId: 'tbl_roof_lounge', x: 980, y: -340, direction: 'left' },
+  { id: 'roof_study_1a', zone: 'Sân Thượng', tableId: 'tbl_roof_study', x: 480, y: -230, direction: 'right' },
+  { id: 'roof_study_1b', zone: 'Sân Thượng', tableId: 'tbl_roof_study', x: 580, y: -230, direction: 'left' },
+  { id: 'roof_study_2a', zone: 'Sân Thượng', tableId: 'tbl_roof_study_2', x: 880, y: -160, direction: 'right' },
+  { id: 'roof_study_2b', zone: 'Sân Thượng', tableId: 'tbl_roof_study_2', x: 980, y: -160, direction: 'left' },
 ];
 
 export const CAFE_ITEMS: CafeItemDefinition[] = [

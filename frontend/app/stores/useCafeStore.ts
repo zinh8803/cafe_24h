@@ -61,6 +61,7 @@ export const useCafeStore = defineStore('cafe', {
     connected: false,
     currentRoomId: 'cafe:main:001',
     currentRoomName: 'Main Hall #001',
+    currentFloor: 'ground' as 'ground' | 'rooftop',
     currentZone: 'Entrance',
     worldCycle: 'midnight' as WorldCycle,
     dailyQuote:
@@ -108,6 +109,7 @@ export const useCafeStore = defineStore('cafe', {
     toastMessage: '',
     mutedUserIds: [] as string[],
     isAimingThrow: false,
+    isStudying: false,
   }),
 
   getters: {
@@ -118,7 +120,10 @@ export const useCafeStore = defineStore('cafe', {
       return DRINK_MENU.find((d) => d.id === state.currentDrinkId) || DRINK_MENU[0];
     },
     visibleChats(state) {
-      return state.chats.filter((c) => !state.mutedUserIds.includes(c.userId));
+      return state.chats
+        .filter((c) => !state.mutedUserIds.includes(c.userId))
+        .slice()
+        .reverse();
     },
     selectedPlayer(state): PlayerNetState | undefined {
       if (!state.selectedPlayerId) return undefined;

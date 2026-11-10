@@ -3,7 +3,7 @@
     <!-- Collapsible Chat History Drawer -->
     <div v-if="showChatLog" class="chat-history-panel">
       <div class="chat-panel-header">
-        <span>💬 Trò chuyện tại {{ store.currentRoomName }}</span>
+        <span>💬 Trò chuyện tại {{ store.currentRoomName }} <small class="header-hint">• Mới nhất trên đầu</small></span>
         <button type="button" class="close-mini" @click="showChatLog = false">Thu gọn</button>
       </div>
       <div class="chat-messages-scroll">

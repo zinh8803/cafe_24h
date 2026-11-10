@@ -101,7 +101,7 @@ export class GameService {
 
   movePlayer(
     socketId: string,
-    payload: { x: number; y: number; direction?: 'up' | 'down' | 'left' | 'right' },
+    payload: { x: number; y: number; direction?: 'up' | 'down' | 'left' | 'right'; floor?: 'ground' | 'rooftop' },
   ): { roomId: string; player: ActivePlayerState; freedSeatId: string | null } | null {
     const roomId = this.socketToRoom.get(socketId);
     if (!roomId) return null;
@@ -113,6 +113,10 @@ export class GameService {
     const now = Date.now();
     if (now - player.lastMoveAt < 30) {
       return null;
+    }
+
+    if (payload.floor && ['ground', 'rooftop'].includes(payload.floor)) {
+      player.floor = payload.floor;
     }
 
     const clamped = this.roomService.clampPosition(payload.x, payload.y);
@@ -307,6 +311,20 @@ export class GameService {
       roomId: ctx.room.id,
       userId: ctx.player.userId,
       isTyping: ctx.player.isTyping,
+    };
+  }
+
+  setPlayerStudy(
+    socketId: string,
+    isStudying: boolean,
+  ): { roomId: string; userId: string; isStudying: boolean } | null {
+    const ctx = this.getPlayerContext(socketId);
+    if (!ctx) return null;
+    ctx.player.isStudying = Boolean(isStudying);
+    return {
+      roomId: ctx.room.id,
+      userId: ctx.player.userId,
+      isStudying: ctx.player.isStudying,
     };
   }
 

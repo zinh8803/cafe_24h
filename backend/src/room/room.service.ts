@@ -23,6 +23,9 @@ export interface ActivePlayerState {
   drinkIcon: string | null;
   drinkName: string | null;
   isTyping?: boolean;
+  isStudying?: boolean;
+  isNpc?: boolean;
+  floor?: 'ground' | 'rooftop';
   lastMoveAt: number;
 }
 
@@ -52,6 +55,29 @@ export class RoomService {
     return 'midnight';
   }
 
+  private createBaristaNpc(roomId: string): ActivePlayerState {
+    return {
+      socketId: `npc_barista_${roomId}`,
+      userId: `npc_barista_${roomId}`,
+      nickname: 'Barista Minh ☕',
+      avatarId: 'av_quiet_reader',
+      outfitId: 'outfit_flannel',
+      mood: 'coffee_lover',
+      roomId,
+      x: 570,
+      y: 205,
+      direction: 'down',
+      seatId: null,
+      drinkId: 'drink_iced_milk_coffee',
+      drinkIcon: '☕',
+      drinkName: 'Cà Phê Sữa Đá',
+      isTyping: false,
+      isStudying: false,
+      isNpc: true,
+      lastMoveAt: Date.now(),
+    };
+  }
+
   private initDefaultRooms() {
     const defaults: Array<{ id: string; name: string; roomType: 'main' | 'quiet' | 'garden' }> = [
       { id: 'cafe:main:001', name: 'Main Hall #001', roomType: 'main' },
@@ -68,6 +94,8 @@ export class RoomService {
         players: new Map(),
         occupiedSeats: new Map(),
       };
+      const barista = this.createBaristaNpc(def.id);
+      room.players.set(barista.socketId, barista);
       this.rooms.set(def.id, room);
     }
   }
@@ -124,6 +152,8 @@ export class RoomService {
       players: new Map(),
       occupiedSeats: new Map(),
     };
+    const barista = this.createBaristaNpc(newId);
+    newRoom.players.set(barista.socketId, barista);
     this.rooms.set(newId, newRoom);
     return newRoom;
   }
@@ -148,14 +178,15 @@ export class RoomService {
   }
 
   clampPosition(x: number, y: number): { x: number; y: number } {
-    const safeX = Math.max(
-      70,
-      Math.min(MAP_BOUNDS.width - 70, Math.round(Number(x) || MAP_BOUNDS.spawnX)),
-    );
-    const safeY = Math.max(
-      120,
-      Math.min(MAP_BOUNDS.height - 55, Math.round(Number(y) || MAP_BOUNDS.spawnY)),
-    );
+    const numX = Number(x);
+    const validX = !isNaN(numX) ? numX : MAP_BOUNDS.spawnX;
+    const safeX = Math.max(70, Math.min(MAP_BOUNDS.width - 70, Math.round(validX)));
+
+    // Support multi-level world map: Rooftop (y: -510..-30) and Ground Floor (y: 120..725)
+    // Avoid using || default because 0 is falsy in JavaScript!
+    const numY = Number(y);
+    const validY = !isNaN(numY) ? numY : MAP_BOUNDS.spawnY;
+    const safeY = Math.max(-510, Math.min(MAP_BOUNDS.height - 55, Math.round(validY)));
     return { x: safeX, y: safeY };
   }
 }

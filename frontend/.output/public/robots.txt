@@ -1,9 +1,0 @@
-User-agent: *
-Allow: /
-Allow: /play
-Allow: /about
-Allow: /privacy
-Allow: /community-guidelines
-Allow: /daily-quotes
-Disallow: /api/
-

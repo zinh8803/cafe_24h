@@ -34,12 +34,31 @@ export function useCafeSocket() {
       drinkId: DRINK_MENU[0].id,
       drinkIcon: DRINK_MENU[0].icon,
       drinkName: DRINK_MENU[0].name,
+      isStudying: store.isStudying,
+    };
+
+    const baristaPlayer: PlayerNetState = {
+      userId: 'npc_barista',
+      nickname: 'Barista Minh ☕',
+      avatarId: 'av_quiet_reader',
+      outfitId: 'outfit_flannel',
+      mood: 'coffee_lover',
+      roomId: store.currentRoomId,
+      x: 570,
+      y: 205,
+      direction: 'down',
+      seatId: null,
+      drinkId: 'drink_iced_milk_coffee',
+      drinkIcon: '☕',
+      drinkName: 'Cà Phê Sữa Đá',
+      isNpc: true,
+      statusBubble: '☕ Đang trực quầy',
     };
 
     return {
       selfUserId: store.userId,
       worldCycle: store.worldCycle,
-      players: [selfPlayer],
+      players: [selfPlayer, baristaPlayer],
       occupiedSeats: {},
     };
   }
@@ -73,9 +92,24 @@ export function useCafeSocket() {
           self.y = payload.y;
           self.direction = payload.direction;
           self.seatId = null;
+          self.floor = payload.floor || store.currentFloor;
         }
         if (sharedSocket?.connected) {
-          sharedSocket.emit('player:move', payload);
+          sharedSocket.emit('player:move', {
+            ...payload,
+            floor: payload.floor || store.currentFloor,
+          });
+        }
+      });
+
+      gameEventBus.on('client:floorChanged', ({ floor }) => {
+        store.currentFloor = floor;
+        const self = store.players.find((p) => p.userId === store.userId);
+        if (self) {
+          self.floor = floor;
+        }
+        if (floor === 'rooftop') {
+          store.currentZone = 'Sân Thượng';
         }
       });
 
@@ -236,6 +270,9 @@ export function useCafeSocket() {
         p.y = payload.y;
         p.direction = payload.direction;
         p.seatId = null;
+        if (payload.floor) {
+          p.floor = payload.floor;
+        }
       }
       gameEventBus.emit('scene:playerMoved', payload);
     });
@@ -267,6 +304,21 @@ export function useCafeSocket() {
         p.drinkName = payload.drinkName;
       }
       gameEventBus.emit('scene:playerDrank', payload);
+    });
+
+    socket.on('barista:order', (payload) => {
+      gameEventBus.emit('scene:baristaOrder', payload);
+    });
+
+    socket.on('player:studyChanged', ({ userId, isStudying }) => {
+      const p = store.players.find((item) => item.userId === userId);
+      if (p) {
+        p.isStudying = isStudying;
+      }
+      if (userId === store.userId) {
+        store.isStudying = isStudying;
+      }
+      gameEventBus.emit('scene:playerStudyChanged', { userId, isStudying });
     });
 
     socket.on('player:updated', (payload) => {
@@ -512,6 +564,18 @@ export function useCafeSocket() {
     if (sharedSocket?.connected) {
       sharedSocket.emit('player:drink', { drinkId: drink.id });
     } else {
+      const self = store.players.find((p) => p.userId === store.userId);
+      gameEventBus.emit('scene:baristaOrder', {
+        orderId: `ord_${Date.now()}`,
+        userId: store.userId,
+        userNickname: store.nickname,
+        targetX: self?.x ?? 580,
+        targetY: self?.y ?? 650,
+        seatId: self?.seatId ?? null,
+        drinkId: drink.id,
+        drinkIcon: drink.icon,
+        drinkName: drink.name,
+      });
       gameEventBus.emit('scene:playerDrank', {
         userId: store.userId,
         drinkId: drink.id,
@@ -519,7 +583,23 @@ export function useCafeSocket() {
         drinkName: drink.name,
       });
     }
-    store.showToast(`Đã gọi ${drink.icon} ${drink.name}`);
+    store.showToast(`Đã gọi ${drink.icon} ${drink.name}! Barista sẽ pha chế và giao tới bàn ☕`);
+  }
+
+  function setStudyMode(isStudying: boolean) {
+    store.isStudying = isStudying;
+    const self = store.players.find((p) => p.userId === store.userId);
+    if (self) {
+      self.isStudying = isStudying;
+    }
+    if (sharedSocket?.connected) {
+      sharedSocket.emit('player:study', { isStudying });
+    } else {
+      gameEventBus.emit('scene:playerStudyChanged', {
+        userId: store.userId,
+        isStudying,
+      });
+    }
   }
 
   function updateProfileAndMood(payload: {
@@ -643,6 +723,7 @@ export function useCafeSocket() {
       let bestHit: any = null;
       for (const p of store.players) {
         if (p.userId === store.userId) continue;
+        if (p.isStudying) continue; // Immune to flying cups while studying!
         const l2 = (tx - startX) * (tx - startX) + (ty - startY) * (ty - startY);
         let t = ((p.x - startX) * (tx - startX) + (p.y - startY) * (ty - startY)) / l2;
         t = Math.max(0, Math.min(1, t));
@@ -698,10 +779,14 @@ export function useCafeSocket() {
 
   function throwCup(targetUserId: string) {
     if (!targetUserId || targetUserId === store.userId) return;
+    const target = store.players.find((p) => p.userId === targetUserId);
+    if (target?.isStudying) {
+      store.showToast(`${target.nickname} đang tập trung học bài 📚, không thể ném ly!`);
+      return;
+    }
     if (sharedSocket?.connected) {
       sharedSocket.emit('cup:throw', { targetUserId });
     } else {
-      const target = store.players.find((p) => p.userId === targetUserId);
       if (!target) return;
       const drink = store.currentDrinkConfig;
       const dodged = Math.random() < 0.4;
@@ -832,6 +917,7 @@ export function useCafeSocket() {
     sendChatMessage,
     sendEmote,
     orderDrink,
+    setStudyMode,
     updateProfileAndMood,
     setWorldCycle,
     triggerCoffeeTogether,

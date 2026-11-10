@@ -87,10 +87,10 @@
         type="button"
         class="hud-action-btn pomodoro-btn"
         :class="{ active: pomodoroRunning }"
-        title="Bật/Tắt đồng hồ tập trung Pomodoro 25 phút"
+        title="Bật/Tắt chế độ học bài Pomodoro 25 phút (Miễn nhiễm ném ly)"
         @click="togglePomodoro"
       >
-        <span>⏱️ {{ formattedPomodoro }}</span>
+        <span>{{ pomodoroRunning ? '📚' : '⏱️' }} {{ formattedPomodoro }} {{ pomodoroRunning ? '(Đang học)' : '' }}</span>
       </button>
 
       <!-- Polaroid Camera Screenshot (Section 4.5) -->
@@ -122,7 +122,7 @@ import { useCafeSocket } from '~/composables/useCafeSocket';
 import { useCafeStore } from '~/stores/useCafeStore';
 
 const store = useCafeStore();
-const { switchRoom, setWorldCycle, capturePolaroidSnapshot, sendChatMessage } = useCafeSocket();
+const { switchRoom, setWorldCycle, capturePolaroidSnapshot, sendChatMessage, setStudyMode } = useCafeSocket();
 
 const audioEnabled = ref(false);
 const rainVol = ref(0.35);
@@ -170,19 +170,24 @@ function onLofiInput(e: Event) {
 function togglePomodoro() {
   if (pomodoroRunning.value) {
     pomodoroRunning.value = false;
+    setStudyMode(false);
     if (pomodoroInterval) clearInterval(pomodoroInterval);
     pomodoroSeconds.value = 25 * 60;
+    store.showToast('Đã dừng chế độ học bài.');
   } else {
     pomodoroRunning.value = true;
-    sendChatMessage('🎧 Bắt đầu phiên tập trung 25 phút tại quán!');
+    setStudyMode(true);
+    sendChatMessage('📚 Bắt đầu phiên học bài tập trung 25 phút tại quán!');
+    store.showToast('📚 Đã bật chế độ học bài 25 phút! Miễn nhiễm hoàn toàn với các đợt ném ly.');
     pomodoroInterval = setInterval(() => {
       if (pomodoroSeconds.value > 0) {
         pomodoroSeconds.value -= 1;
       } else {
         pomodoroRunning.value = false;
+        setStudyMode(false);
         if (pomodoroInterval) clearInterval(pomodoroInterval);
         pomodoroSeconds.value = 25 * 60;
-        store.showToast('🎉 Hoàn thành 25 phút tập trung! Hãy tự thưởng một ngụm cà phê nhé.');
+        store.showToast('🎉 Hoàn thành 25 phút học bài! Hãy tự thưởng một ngụm cà phê nhé ☕.');
       }
     }, 1000);
   }
@@ -190,6 +195,7 @@ function togglePomodoro() {
 
 onBeforeUnmount(() => {
   if (pomodoroInterval) clearInterval(pomodoroInterval);
+  setStudyMode(false);
   ambientAudio.stop();
 });
 </script>

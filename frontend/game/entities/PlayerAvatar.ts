@@ -34,7 +34,7 @@ export class PlayerAvatar {
     this.targetY = state.y;
 
     this.container = scene.add.container(state.x, state.y);
-    this.container.setDepth(state.y);
+    this.container.setDepth(3000 + Math.round(state.y));
 
     // Shadow on floor
     const shadow = scene.add.ellipse(0, 18, 34, 14, 0x0b0908, 0.38);
@@ -124,7 +124,9 @@ export class PlayerAvatar {
 
   private formatNameLabel(): string {
     const moodObj = MOOD_OPTIONS.find((m) => m.id === this.state.mood) || MOOD_OPTIONS[4];
-    return `${moodObj.emoji} ${this.state.nickname}`;
+    const studyTag = this.state.isStudying ? ' 📚' : '';
+    const npcTag = this.state.isNpc ? ' [NPC]' : '';
+    return `${moodObj.emoji} ${this.state.nickname}${studyTag}${npcTag}`;
   }
 
   public setTyping(isTyping: boolean) {
@@ -140,6 +142,14 @@ export class PlayerAvatar {
 
     const g = this.bodyGraphic;
     g.clear();
+
+    // Study mode peaceful halo aura
+    if (this.state.isStudying) {
+      g.lineStyle(2, 0x38bdf8, 0.7);
+      g.strokeEllipse(0, -12, 42, 52);
+      g.fillStyle(0x38bdf8, 0.08);
+      g.fillEllipse(0, -12, 42, 52);
+    }
 
     // Self selection ring on floor
     if (this.isSelf) {
@@ -327,7 +337,7 @@ export class PlayerAvatar {
     const bob = computeAvatarBobOffset(this.animState, deltaMs);
     this.bodyContainer.y = bob.offsetY;
     this.bodyContainer.rotation = bob.tiltRad;
-    this.container.setDepth(Math.round(this.container.y));
+    this.container.setDepth(3000 + Math.round(this.container.y));
   }
 
   public destroy() {
