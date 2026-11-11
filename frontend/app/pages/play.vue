@@ -15,8 +15,8 @@
       <CafePhaserCanvas />
       <template #fallback>
         <div class="loading-cafe-stage">
-          <div class="spinner">☕</div>
-          <p>Đang pha cà phê và mở cửa quán 24h Café...</p>
+          <div class="spinner">🍵</div>
+          <p class="loading-text">Đang đun nước pha trà và mở cửa 24h Café...</p>
         </div>
       </template>
     </ClientOnly>
@@ -62,7 +62,9 @@ onMounted(() => {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #120d0a;
+  background-color: #f7f3eb;
+  background-image: radial-gradient(rgba(140, 98, 57, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
   user-select: none;
 }
 
@@ -73,7 +75,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #fef3c7;
+  color: #120803;
   gap: 12px;
 }
 
@@ -94,18 +96,25 @@ onMounted(() => {
 
 .cafe-toast {
   position: absolute;
-  top: 68px;
+  top: 76px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 50;
-  background: rgba(28, 20, 14, 0.94);
-  border: 1px solid #fbbf24;
-  color: #fef3c7;
-  padding: 9px 18px;
+  background: #ffffff;
+  border: 2px solid #4a3221;
+  color: #120803;
+  padding: 9px 22px;
   border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  font-size: 13.5px;
+  font-weight: 800;
+  box-shadow: 0 12px 30px rgba(43, 27, 17, 0.2);
+}
+
+.loading-text {
+  font-size: 15px;
+  color: #3d2314;
+  font-weight: 700;
+  font-family: 'Fraunces', Georgia, serif;
 }
 
 .fade-enter-active,

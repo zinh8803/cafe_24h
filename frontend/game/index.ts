@@ -7,7 +7,7 @@ export function createCafePhaserGame(parentElement: HTMLElement): Phaser.Game {
     parent: parentElement,
     width: 1200,
     height: 780,
-    backgroundColor: '#161210',
+    backgroundColor: '#2e1e16',
     preserveDrawingBuffer: true,
     scale: {
       mode: Phaser.Scale.FIT,

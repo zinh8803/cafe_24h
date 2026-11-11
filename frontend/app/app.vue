@@ -13,8 +13,8 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background-color: #120d0a;
-  color: #f8f5f0;
+  background-color: #f7f3eb;
+  color: #120803;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }

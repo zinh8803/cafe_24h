@@ -71,8 +71,10 @@ function updateVector(e: PointerEvent) {
   width: 92px;
   height: 92px;
   border-radius: 50%;
-  background: rgba(24, 18, 14, 0.65);
-  border: 2px solid rgba(212, 163, 115, 0.45);
+  background: rgba(250, 246, 238, 0.75);
+  border: 2px solid #b08968;
+  box-shadow: 0 8px 24px rgba(67, 40, 28, 0.18);
+  backdrop-filter: blur(8px);
   display: none;
   align-items: center;
   justify-content: center;
@@ -83,8 +85,9 @@ function updateVector(e: PointerEvent) {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(212, 163, 115, 0.9);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  background: #283618;
+  border: 2px solid #fefae0;
+  box-shadow: 0 4px 12px rgba(40, 54, 24, 0.35);
 }
 
 @media (max-width: 900px), (pointer: coarse) {

@@ -1,70 +1,93 @@
 <template>
-  <footer class="cafe-bottom-bar">
-    <!-- Collapsible Chat History Drawer -->
-    <div v-if="showChatLog" class="chat-history-panel">
-      <div class="chat-panel-header">
-        <span>💬 Trò chuyện tại {{ store.currentRoomName }} <small class="header-hint">• Mới nhất trên đầu</small></span>
-        <button type="button" class="close-mini" @click="showChatLog = false">Thu gọn</button>
-      </div>
-      <div class="chat-messages-scroll">
-        <div v-if="store.visibleChats.length === 0" class="empty-chat-hint">
-          Quán đang yên tĩnh... Hãy gửi một lời chào 👋 hoặc nhấp một ngụm cà phê nhé.
-        </div>
-        <div
-          v-for="msg in store.visibleChats"
-          :key="msg.id"
-          class="chat-line"
-        >
-          <strong class="chat-author">{{ msg.nickname }}:</strong>
-          <span class="chat-text">{{ msg.content }}</span>
-          <button
-            v-if="msg.userId !== store.userId"
-            type="button"
-            class="mute-btn"
-            title="Ẩn tin nhắn từ người này"
-            @click="store.toggleMuteUser(msg.userId)"
-          >
-            🔇
+  <footer class="cafe-bottom-bar kissaten-bottom-bar">
+    <!-- Collapsible Chat History Drawer (Sổ trò chuyện Kissaten) -->
+    <transition name="drawer-slide">
+      <div v-if="showChatLog" class="chat-history-panel washi-paper-drawer">
+        <div class="chat-panel-header">
+          <div class="header-left">
+            <span class="chat-header-title">📜 Trò chuyện tại {{ store.currentRoomName }}</span>
+            <span class="chat-newest-badge">Mới nhất trên đầu</span>
+          </div>
+          <button type="button" class="close-mini-btn" @click="showChatLog = false">
+            ✕ Thu gọn
           </button>
         </div>
-      </div>
-    </div>
 
-    <!-- Main Dock Bar -->
-    <div class="dock-main-row">
+        <div class="chat-messages-scroll">
+          <div v-if="store.visibleChats.length === 0" class="empty-chat-hint">
+            <span class="empty-icon">🍵</span>
+            <p>Quán đang rất thanh tịnh... Hãy gửi một lời chào hoặc thưởng thức một tách trà nhé.</p>
+          </div>
+          <div
+            v-for="msg in store.visibleChats"
+            :key="msg.id"
+            class="chat-bubble-row"
+            :class="{ isSelf: msg.userId === store.userId }"
+          >
+            <div class="bubble-content">
+              <span class="bubble-author">{{ msg.nickname }}</span>
+              <span class="bubble-text">{{ msg.content }}</span>
+            </div>
+            <button
+              v-if="msg.userId !== store.userId"
+              type="button"
+              class="mute-user-btn"
+              title="Ẩn tin nhắn từ người này"
+              @click="store.toggleMuteUser(msg.userId)"
+            >
+              🔇
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Main Japanese Kissaten Bento Tray Dock -->
+    <div class="dock-main-row bento-tray-dock">
       <!-- Left Quick Actions -->
       <div class="dock-actions">
         <button
           type="button"
-          class="dock-btn"
+          class="dock-btn kissaten-tab"
+          :class="{ active: showChatLog }"
+          title="Mở sổ trò chuyện"
           @click="showChatLog = !showChatLog"
         >
-          💬 Lịch sử ({{ store.visibleChats.length }})
+          <span class="dock-icon">📜</span>
+          <span class="dock-label">Trò chuyện</span>
+          <span v-if="store.visibleChats.length" class="chat-counter-badge">
+            {{ store.visibleChats.length }}
+          </span>
         </button>
 
         <button
           type="button"
-          class="dock-btn highlight-drink"
+          class="dock-btn highlight-drink kissaten-tab"
+          title="Gọi món từ Barista Minh"
           @click="store.showDrinkModal = true"
         >
-          {{ store.currentDrinkConfig.icon }} Gọi Đồ Uống
+          <span class="dock-icon pulse-drink">{{ store.currentDrinkConfig.icon }}</span>
+          <span class="dock-label">Thực Đơn</span>
         </button>
 
+        <!-- Ném Ly (Aim Mode F) -->
         <div class="throw-group">
           <button
             type="button"
-            class="dock-btn throw-aim-btn"
+            class="dock-btn throw-aim-btn kissaten-tab"
             :class="{ active: store.isAimingThrow }"
             :title="store.isAimingThrow ? 'Nhấp để ném ngay phía trước, hoặc click chuột vào sàn quán' : 'Bật nhắm để ném ly có định hướng (Phím tắt: F hoặc click chuột phải)'"
             @click="onThrowBtnClick"
           >
-            🎯 {{ store.isAimingThrow ? 'Bấm Ném Ngay' : 'Ném Ly' }}
+            <span class="dock-icon">🎯</span>
+            <span class="dock-label">{{ store.isAimingThrow ? 'Ném Ngay' : 'Ném Ly' }}</span>
+            <span class="shortcut-key">F</span>
           </button>
           <button
             v-if="store.isAimingThrow"
             type="button"
             class="cancel-aim-btn"
-            title="Huỷ chế độ nhắm (ESC)"
+            title="Huỷ nhắm (ESC)"
             @click.stop="store.toggleAimThrow(false)"
           >
             ✕
@@ -73,38 +96,43 @@
 
         <button
           type="button"
-          class="dock-btn"
-          title="Nâng ly cà phê cùng mọi người trong phòng"
+          class="dock-btn kissaten-tab"
+          title="Nâng ly trà cùng mọi người trong phòng"
           @click="triggerCoffeeTogether"
         >
-          🥂 Cụm Ly
+          <span class="dock-icon">🥂</span>
+          <span class="dock-label">Cụm Ly</span>
         </button>
 
         <button
           type="button"
-          class="dock-btn"
+          class="dock-btn kissaten-tab"
+          title="Xem bảng thẻ thông điệp ẩn danh"
           @click="openBoard"
         >
-          📌 Lời Nhắn Ẩn Danh
+          <span class="dock-icon">🎏</span>
+          <span class="dock-label">Thẻ Lời Nhắn</span>
         </button>
       </div>
 
-      <!-- Center Chat Input -->
-      <form class="chat-form" @submit.prevent="handleSend">
+      <!-- Center Chat Input (Giấy thư Washi) -->
+      <form class="chat-form washi-chat-form" @submit.prevent="handleSend">
         <input
           v-model="draft"
           type="text"
           maxlength="120"
-          placeholder="Nhắn trò chuyện trong quán (Enter để gửi)..."
+          placeholder="Nhắn nhủ điều gì đó với quán (Enter để gửi)..."
           class="chat-input"
           @input="onTypingInput"
           @blur="onStopTyping"
         />
-        <button type="submit" class="send-btn">Gửi</button>
+        <button type="submit" class="send-btn hanko-send-btn" title="Gửi lời nhắn">
+          <span class="hanko-icon">➤</span>
+        </button>
       </form>
 
-      <!-- Right Quick Emojis -->
-      <div class="emoji-strip">
+      <!-- Right Quick Tactile Emojis (Trà đạo & Ghibli) -->
+      <div class="emoji-strip kissaten-emoji-tray">
         <button
           v-for="emo in quickEmojis"
           :key="emo"
@@ -136,7 +164,7 @@ const {
 
 const draft = ref('');
 const showChatLog = ref(false);
-const quickEmojis = ['👋', '☕', '❤️', '😂', '✨', '🎵'];
+const quickEmojis = ['🍵', '☕', '🍡', '🌸', '✨', '🐱'];
 let typingTimer: ReturnType<typeof setTimeout> | null = null;
 
 function onTypingInput() {
@@ -178,233 +206,399 @@ function openBoard() {
 </script>
 
 <style scoped>
-.cafe-bottom-bar {
+.kissaten-bottom-bar {
   position: absolute;
-  bottom: 12px;
-  left: 14px;
-  right: 14px;
+  bottom: 14px;
+  left: 16px;
+  right: 16px;
   z-index: 30;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   pointer-events: none;
 }
 
-.chat-history-panel {
-  width: min(560px, 94vw);
-  background: rgba(20, 15, 12, 0.92);
-  border: 1px solid rgba(212, 163, 115, 0.35);
-  border-radius: 14px;
-  padding: 10px 14px;
+/* Washi Paper Chat History Drawer */
+.washi-paper-drawer {
+  width: min(580px, 95vw);
+  max-height: 290px;
+  background: #ffffff;
+  border: 2px solid #4a3221;
+  border-radius: 20px;
+  padding: 14px 18px;
   pointer-events: auto;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px -8px rgba(43, 27, 17, 0.35);
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fde68a;
-  margin-bottom: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid #d4c5b2;
+  margin-bottom: 8px;
 }
 
-.close-mini {
-  background: transparent;
-  border: none;
-  color: #d6ccc2;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-header-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #120803;
+  letter-spacing: -0.01em;
+}
+
+.chat-newest-badge {
   font-size: 11px;
+  font-weight: 800;
+  color: #0d3b1e;
+  background: #d8f3dc;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #2d6a4f;
+}
+
+.close-mini-btn {
+  background: #fdfbf7;
+  border: 1.5px solid #5c3a21;
+  color: #1a0f08;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.close-mini-btn:hover {
+  background: #faedcd;
+  color: #8b2500;
 }
 
 .chat-messages-scroll {
-  max-height: 150px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  font-size: 13px;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.chat-messages-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.chat-messages-scroll::-webkit-scrollbar-thumb {
+  background: #8c6239;
+  border-radius: 4px;
 }
 
 .empty-chat-hint {
-  color: #a89f91;
-  font-style: italic;
-  font-size: 12.5px;
-}
-
-.chat-line {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  color: #4a3221;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: center;
   gap: 6px;
-  color: #f8f5f0;
 }
 
-.chat-author {
-  color: #fbbf24;
-  white-space: nowrap;
+.empty-icon {
+  font-size: 26px;
 }
 
-.chat-text {
+.chat-bubble-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  background: #fdfbf7;
+  border: 1.5px solid #d4c5b2;
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.chat-bubble-row.isSelf {
+  background: #fefae0;
+  border-color: #8c6239;
+}
+
+.bubble-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bubble-author {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #8b2500;
+}
+
+.chat-bubble-row.isSelf .bubble-author {
+  color: #1b4332;
+}
+
+.bubble-text {
+  font-size: 13.5px;
+  color: #120803;
+  font-weight: 600;
+  line-height: 1.45;
   word-break: break-word;
-  flex: 1;
 }
 
-.mute-btn {
+.mute-user-btn {
   background: transparent;
   border: none;
+  font-size: 13px;
   cursor: pointer;
-  opacity: 0.45;
-  font-size: 11px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
 }
 
-.mute-btn:hover {
+.mute-user-btn:hover {
   opacity: 1;
 }
 
-.dock-main-row {
-  width: min(1140px, 98vw);
-  background: rgba(22, 16, 12, 0.92);
-  border: 1px solid rgba(212, 163, 115, 0.36);
-  border-radius: 18px;
-  padding: 8px 12px;
+/* Transitions */
+.drawer-slide-enter-active,
+.drawer-slide-leave-active {
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drawer-slide-enter-from,
+.drawer-slide-leave-to {
+  transform: translateY(20px) scale(0.97);
+  opacity: 0;
+}
+
+/* Bento Tray Dock - High Contrast Solid Wood */
+.bento-tray-dock {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
-  flex-wrap: wrap;
+  background: #ffffff;
+  border: 2px solid #4a3221;
+  border-radius: 24px;
+  padding: 8px 14px;
+  box-shadow: 0 16px 36px -4px rgba(43, 27, 17, 0.35), 0 2px 8px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   pointer-events: auto;
-  backdrop-filter: blur(10px);
+  max-width: 98vw;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .dock-actions {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
 }
 
-.dock-btn {
-  border: 1px solid rgba(212, 163, 115, 0.3);
-  background: rgba(42, 31, 23, 0.85);
-  color: #faedcd;
-  padding: 7px 11px;
-  border-radius: 10px;
-  font-size: 12.5px;
-  font-weight: 600;
+.kissaten-tab {
+  background: #fdfbf7;
+  border: 1.5px solid #5c3a21;
+  color: #1a0f08;
+  padding: 8px 13px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
-.dock-btn:hover {
-  background: #b07d56;
-  color: #fff;
+.kissaten-tab:hover {
+  background: #faedcd;
+  border-color: #8b2500;
+  color: #000000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(43, 27, 17, 0.2);
+}
+
+.kissaten-tab.active {
+  background: #1b4332;
+  border-color: #1b4332;
+  color: #ffffff;
+}
+
+.dock-icon {
+  font-size: 15px;
+}
+
+.chat-counter-badge {
+  background: #8b2500;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-left: 2px;
 }
 
 .highlight-drink {
-  border-color: rgba(251, 191, 36, 0.5);
-  color: #fef3c7;
+  background: #e8f5e9;
+  border-color: #1b4332;
+  color: #0d3b1e;
+  font-weight: 800;
 }
 
-.throw-aim-btn {
-  border-color: rgba(239, 68, 68, 0.45);
-  color: #fca5a5;
-  transition: all 0.18s ease;
-}
-
-.throw-aim-btn:hover {
-  background: rgba(239, 68, 68, 0.28);
-  color: #fff;
-}
-
-.throw-aim-btn.active {
-  background: #dc2626;
-  color: #fff;
-  border-color: #f87171;
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
+.highlight-drink:hover {
+  background: #c8e6c9;
+  border-color: #0d3b1e;
 }
 
 .throw-group {
   display: flex;
   align-items: center;
-  gap: 3px;
+}
+
+.throw-aim-btn {
+  background: #fff1f2;
+  border-color: #b91c1c;
+  color: #881337;
+  font-weight: 800;
+}
+
+.throw-aim-btn.active {
+  background: #b91c1c;
+  border-color: #7f1d1d;
+  color: #ffffff;
+  animation: aimPulse 1.6s infinite ease-in-out;
+}
+
+@keyframes aimPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(185, 28, 28, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(185, 28, 28, 0); }
+}
+
+.shortcut-key {
+  font-size: 10.5px;
+  font-weight: 900;
+  background: #4a3221;
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #ffffff;
+  margin-left: 2px;
 }
 
 .cancel-aim-btn {
-  background: rgba(239, 68, 68, 0.45);
-  color: #fee2e2;
-  border: 1px solid rgba(248, 113, 113, 0.6);
-  border-radius: 8px;
-  width: 22px;
-  height: 28px;
+  background: #b91c1c;
+  color: #ffffff;
+  border: none;
+  border-radius: 0 12px 12px 0;
+  padding: 8px 9px;
+  margin-left: -4px;
   font-size: 11px;
-  font-weight: 700;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+/* Washi Chat Input Bar */
+.washi-chat-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 280px;
+  flex: 1;
+}
+
+.chat-input {
+  width: 100%;
+  background: #ffffff;
+  border: 2px solid #5c3a21;
+  border-radius: 16px;
+  padding: 9px 44px 9px 14px;
+  color: #120803;
+  font-size: 13.5px;
+  font-weight: 600;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.chat-input:focus {
+  border-color: #1b4332;
+  box-shadow: 0 0 0 3px rgba(27, 67, 50, 0.25);
+  background: #ffffff;
+}
+
+.chat-input::placeholder {
+  color: #6b5344;
+}
+
+.hanko-send-btn {
+  position: absolute;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #7f1d1d;
+  background: #b91c1c;
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 6px rgba(185, 28, 28, 0.4);
 }
 
-.cancel-aim-btn:hover {
+.hanko-send-btn:hover {
   background: #dc2626;
-  color: #fff;
+  transform: scale(1.08) rotate(3deg);
 }
 
-.chat-form {
-  flex: 1;
-  min-width: 220px;
-  display: flex;
-  gap: 6px;
+.hanko-icon {
+  font-family: serif;
+  font-weight: 900;
+  font-size: 13.5px;
 }
 
-.chat-input {
-  flex: 1;
-  background: rgba(14, 10, 8, 0.85);
-  border: 1px solid rgba(212, 163, 115, 0.35);
-  border-radius: 10px;
-  padding: 8px 12px;
-  color: #fffbeb;
-  font-size: 13px;
-  outline: none;
-}
-
-.chat-input:focus {
-  border-color: #fbbf24;
-}
-
-.send-btn {
-  background: #d4a373;
-  color: #1c130e;
-  border: none;
-  border-radius: 10px;
-  padding: 8px 15px;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.emoji-strip {
+/* Emoji Tray */
+.kissaten-emoji-tray {
   display: flex;
   align-items: center;
   gap: 4px;
+  background: #fdfbf7;
+  padding: 3px;
+  border-radius: 16px;
+  border: 1.5px solid #5c3a21;
 }
 
 .emoji-btn {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(38, 28, 22, 0.8);
-  border-radius: 9px;
-  width: 34px;
-  height: 34px;
-  font-size: 16px;
+  background: transparent;
+  border: none;
+  font-size: 17px;
+  padding: 5px 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: transform 0.14s ease;
+  transition: all 0.16s ease;
 }
 
 .emoji-btn:hover {
-  transform: translateY(-2px) scale(1.1);
-  background: rgba(212, 163, 115, 0.3);
+  background: rgba(139, 37, 0, 0.18);
+  transform: scale(1.22);
+}
+
+@media (max-width: 900px) {
+  .dock-label,
+  .shortcut-key {
+    display: none;
+  }
+  .washi-chat-form {
+    min-width: 180px;
+  }
 }
 </style>
-

@@ -2,19 +2,26 @@
   <nav class="site-navbar">
     <div class="nav-inner">
       <NuxtLink to="/" class="brand-link">
-        <span class="cup-badge">☕</span>
-        <div>
-          <span class="brand-name">24h Café</span>
-          <span class="brand-tagline">A little place to slow down</span>
+        <div class="brand-hanko">
+          <span class="hanko-kanji">☕</span>
+        </div>
+        <div class="brand-info">
+          <div class="brand-main">
+            <span class="brand-name">24h Café</span>
+          </div>
+          <span class="brand-tagline">Quán Cà Phê Mộc Mạc • A Little Place to Slow Down</span>
         </div>
       </NuxtLink>
 
       <div class="nav-links">
-        <NuxtLink to="/daily-quotes" class="nav-item">Daily Quotes</NuxtLink>
-        <NuxtLink to="/about" class="nav-item">Giới Thiệu</NuxtLink>
-        <NuxtLink to="/community-guidelines" class="nav-item">Quy Tắc</NuxtLink>
-        <NuxtLink to="/privacy" class="nav-item">Quyền Riêng Tư</NuxtLink>
-        <NuxtLink to="/play" class="enter-cafe-btn">Bước Vào Quán →</NuxtLink>
+        <NuxtLink to="/daily-quotes" class="nav-item">📜 Daily Quotes</NuxtLink>
+        <NuxtLink to="/about" class="nav-item">🍵 Giới Thiệu</NuxtLink>
+        <NuxtLink to="/community-guidelines" class="nav-item">🏮 Nội Quy</NuxtLink>
+        <NuxtLink to="/privacy" class="nav-item">🔒 Riêng Tư</NuxtLink>
+        <NuxtLink to="/play" class="enter-cafe-btn">
+          <span>🍵 Bước Vào Quán</span>
+          <span class="btn-arrow">→</span>
+        </NuxtLink>
       </div>
     </div>
   </nav>
@@ -24,90 +31,149 @@
 .site-navbar {
   position: sticky;
   top: 0;
-  z-index: 40;
-  background: rgba(20, 15, 12, 0.88);
-  border-bottom: 1px solid rgba(212, 163, 115, 0.22);
-  backdrop-filter: blur(12px);
+  z-index: 50;
+  background: #fdfbf7;
+  border-bottom: 2.5px solid #4a3221;
+  box-shadow: 0 4px 18px rgba(43, 27, 17, 0.08);
+  backdrop-filter: blur(8px);
 }
 
 .nav-inner {
-  max-width: 1180px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 14px 22px;
+  padding: 12px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
 .brand-link {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   text-decoration: none;
-  color: #fef3c7;
+  color: #120803;
+  transition: transform 0.15s ease;
 }
 
-.cup-badge {
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
-  background: rgba(212, 163, 115, 0.2);
-  border: 1px solid rgba(212, 163, 115, 0.4);
+.brand-link:hover {
+  transform: translateY(-1px);
+}
+
+.brand-hanko {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #b91c1c;
+  border: 2px solid #7f1d1d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 19px;
+  box-shadow: 0 2px 6px rgba(185, 28, 28, 0.35);
+  flex-shrink: 0;
+}
+
+.hanko-kanji {
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 15px;
+  letter-spacing: 1px;
+  font-family: serif;
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.brand-kanji {
+  font-size: 13px;
+  font-weight: 800;
+  color: #8b2500;
+  letter-spacing: 1px;
 }
 
 .brand-name {
-  display: block;
   font-family: 'Fraunces', Georgia, serif;
-  font-size: 19px;
-  font-weight: 700;
-  line-height: 1.1;
+  font-size: 20px;
+  font-weight: 800;
+  color: #120803;
+  letter-spacing: -0.01em;
 }
 
 .brand-tagline {
-  display: block;
-  font-size: 11.5px;
-  color: #cbb8a4;
+  font-size: 11px;
+  font-weight: 600;
+  color: #4a3221;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
 .nav-item {
-  color: #e6ccb2;
+  color: #2b1b11;
   text-decoration: none;
   font-size: 13.5px;
-  font-weight: 500;
-  transition: color 0.15s ease;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
 }
 
 .nav-item:hover,
 .nav-item.router-link-active {
-  color: #fbbf24;
+  color: #b91c1c;
+  background: #f4ecdf;
+  border-color: #d8c3b0;
 }
 
 .enter-cafe-btn {
-  background: linear-gradient(135deg, #d4a373, #b07d56);
-  color: #1c130e;
+  background: #1b4332;
+  color: #ffffff;
   text-decoration: none;
   padding: 9px 18px;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 13.5px;
-  transition: transform 0.15s ease;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 2px solid #0d281e;
+  box-shadow: 0 3px 0 #0d281e;
+  transition: all 0.15s ease;
 }
 
 .enter-cafe-btn:hover {
+  background: #2d6a4f;
   transform: translateY(-1px);
+  box-shadow: 0 4px 0 #0d281e;
+}
+
+.enter-cafe-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #0d281e;
+}
+
+.btn-arrow {
+  font-size: 15px;
+  transition: transform 0.15s ease;
+}
+
+.enter-cafe-btn:hover .btn-arrow {
+  transform: translateX(3px);
 }
 </style>
-

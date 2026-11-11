@@ -1,115 +1,144 @@
 <template>
-  <header class="cafe-top-hud">
-    <!-- Left: Brand + Room Selector + Zone -->
-    <div class="hud-left">
-      <NuxtLink to="/" class="brand-badge" title="Về trang chủ">
-        <span class="brand-dot" :class="{ online: store.connected }" />
-        <span class="brand-title">24h Café</span>
-      </NuxtLink>
+  <header class="cafe-top-hud kissaten-hud">
+    <div class="hud-inner">
+      <!-- Left: Brand + Room Selector + Zone Pill -->
+      <div class="hud-left">
+        <NuxtLink to="/" class="brand-link" title="Về trang chủ">
+          <div class="brand-hanko">
+            <span class="hanko-icon">☕</span>
+          </div>
+          <div class="brand-info">
+            <div class="brand-main">
+              <span class="brand-name">24h Café</span>
+              <span class="status-matcha-dot" :class="{ online: store.connected }" title="Kết nối trực tiếp" />
+            </div>
+            <span class="brand-tagline">A Little Place to Slow Down</span>
+          </div>
+        </NuxtLink>
 
-      <div class="room-selector-wrap">
-        <select
-          :value="store.currentRoomId"
-          class="room-select"
-          aria-label="Chọn phòng"
-          @change="onRoomChange"
-        >
-          <option v-for="room in store.roomsList" :key="room.id" :value="room.id">
-            {{ room.name }} ({{ room.onlineCount }}/{{ room.capacity }})
-          </option>
-        </select>
-      </div>
+        <div class="room-selector-wrap">
+          <select
+            :value="store.currentRoomId"
+            class="room-select kissaten-pill"
+            aria-label="Chọn phòng"
+            @change="onRoomChange"
+          >
+            <option v-for="room in store.roomsList" :key="room.id" :value="room.id">
+              🍵 {{ room.name }} ({{ room.onlineCount }}/{{ room.capacity }})
+            </option>
+          </select>
+        </div>
 
-      <div class="zone-pill">
-        <span>📍 {{ store.currentZone }}</span>
-        <span class="divider">•</span>
-        <span>👥 {{ store.players.length }} người</span>
-      </div>
-    </div>
-
-    <!-- Center: Day/Night & Weather Cycle Switcher -->
-    <div class="hud-center">
-      <button
-        v-for="(cfg, key) in WORLD_CYCLES"
-        :key="key"
-        type="button"
-        class="cycle-btn"
-        :class="{ active: store.worldCycle === key }"
-        :title="cfg.subtitle"
-        @click="setWorldCycle(key as WorldCycle)"
-      >
-        <span>{{ cfg.icon }}</span>
-        <span class="cycle-label">{{ cfg.label }}</span>
-      </button>
-    </div>
-
-    <!-- Right: Audio Mixer, Pomodoro Timer, Camera & Profile -->
-    <div class="hud-right">
-      <!-- Ambient Sound Toggle -->
-      <div class="audio-cluster">
-        <button
-          type="button"
-          class="hud-action-btn"
-          :class="{ active: audioEnabled }"
-          @click="toggleAudio"
-        >
-          <span>{{ audioEnabled ? '🎧 Nhạc & Mưa: Bật' : '🔇 Bật Nhạc Chill' }}</span>
-        </button>
-
-        <div v-if="audioEnabled" class="audio-popover">
-          <label class="slider-row">
-            <span>🌧️ Mưa</span>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              :value="rainVol"
-              @input="onRainInput"
-            />
-          </label>
-          <label class="slider-row">
-            <span>🎹 Lofi</span>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              :value="lofiVol"
-              @input="onLofiInput"
-            />
-          </label>
+        <div class="zone-pill kissaten-pill">
+          <span class="zone-name">📍 {{ store.currentZone }}</span>
+          <span class="divider">•</span>
+          <span class="players-count">👥 {{ store.players.length }} vị khách</span>
         </div>
       </div>
 
-      <!-- Cozy Study Pomodoro -->
-      <button
-        type="button"
-        class="hud-action-btn pomodoro-btn"
-        :class="{ active: pomodoroRunning }"
-        title="Bật/Tắt chế độ học bài Pomodoro 25 phút (Miễn nhiễm ném ly)"
-        @click="togglePomodoro"
-      >
-        <span>{{ pomodoroRunning ? '📚' : '⏱️' }} {{ formattedPomodoro }} {{ pomodoroRunning ? '(Đang học)' : '' }}</span>
-      </button>
+      <!-- Center: Weather Cycle Switcher -->
+      <nav class="hud-center kissaten-cycle-bar" aria-label="Thời tiết & Chu kỳ quán">
+        <button
+          v-for="(cfg, key) in WORLD_CYCLES"
+          :key="key"
+          type="button"
+          class="cycle-btn"
+          :class="{ active: store.worldCycle === key }"
+          :title="cfg.subtitle"
+          @click="setWorldCycle(key as WorldCycle)"
+        >
+          <span class="cycle-icon">{{ cfg.icon }}</span>
+          <span class="cycle-label">{{ cfg.label }}</span>
+        </button>
+      </nav>
 
-      <!-- Polaroid Camera Screenshot (Section 4.5) -->
-      <button
-        type="button"
-        class="hud-action-btn camera-btn"
-        @click="capturePolaroidSnapshot"
-      >
-        <span>📸 Chụp Ảnh</span>
-      </button>
+      <!-- Right: Audio Mixer, Pomodoro Timer, Camera & Profile -->
+      <div class="hud-right">
+        <!-- Ambient Sound Toggle + Mini Equalizer -->
+        <div class="audio-cluster">
+          <button
+            type="button"
+            class="hud-action-btn audio-btn kissaten-btn"
+            :class="{ active: audioEnabled }"
+            @click="toggleAudio"
+          >
+            <div v-if="audioEnabled" class="bamboo-equalizer">
+              <span class="bamboo-bar b1" />
+              <span class="bamboo-bar b2" />
+              <span class="bamboo-bar b3" />
+              <span class="bamboo-bar b4" />
+            </div>
+            <span v-else class="audio-muted-icon">🔇</span>
+            <span class="btn-text">{{ audioEnabled ? 'Trà & Mưa Rơi' : 'Bật Nhạc Trà' }}</span>
+          </button>
 
-      <!-- Avatar & Mood Customizer -->
-      <button
-        type="button"
-        class="hud-action-btn profile-btn"
-        @click="store.showCustomizerModal = true"
-      >
-        <span>{{ store.currentMoodConfig.emoji }} {{ store.nickname }}</span>
-      </button>
+          <!-- Floating Washi Audio Popover -->
+          <div v-if="audioEnabled" class="audio-popover washi-card">
+            <div class="popover-header">
+              <span>Âm Thanh Không Gian</span>
+            </div>
+            <label class="slider-row">
+              <span class="slider-label">🌧️ Mưa rào</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                :value="rainVol"
+                class="kissaten-slider"
+                @input="onRainInput"
+              />
+            </label>
+            <label class="slider-row">
+              <span class="slider-label">🎹 Lofi Dương Cầm</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                :value="lofiVol"
+                class="kissaten-slider"
+                @input="onLofiInput"
+              />
+            </label>
+          </div>
+        </div>
+
+        <!-- Cozy Study Pomodoro -->
+        <button
+          type="button"
+          class="hud-action-btn pomodoro-btn kissaten-btn"
+          :class="{ active: pomodoroRunning }"
+          title="Bật/Tắt chế độ học bài Pomodoro 25 phút (Miễn nhiễm ném ly)"
+          @click="togglePomodoro"
+        >
+          <span class="pomo-icon">{{ pomodoroRunning ? '📖' : '⏳' }}</span>
+          <span class="pomo-digits">{{ formattedPomodoro }}</span>
+          <span v-if="pomodoroRunning" class="pomo-badge">Học bài</span>
+        </button>
+
+        <!-- Polaroid Camera Screenshot -->
+        <button
+          type="button"
+          class="hud-action-btn camera-btn kissaten-btn"
+          title="Chụp ảnh lưu niệm hoài niệm"
+          @click="capturePolaroidSnapshot"
+        >
+          <span class="cam-icon">📷</span>
+          <span class="btn-text">Ảnh Kỷ Niệm</span>
+        </button>
+
+        <!-- Avatar & Mood Profile -->
+        <button
+          type="button"
+          class="hud-action-btn profile-btn kissaten-btn"
+          title="Đổi diện mạo & Cảm xúc"
+          @click="store.showCustomizerModal = true"
+        >
+          <span class="profile-emoji">{{ store.currentMoodConfig.emoji }}</span>
+          <span class="profile-name">{{ store.nickname }}</span>
+        </button>
+      </div>
     </div>
   </header>
 </template>
@@ -173,23 +202,25 @@ function togglePomodoro() {
     setStudyMode(false);
     if (pomodoroInterval) clearInterval(pomodoroInterval);
     pomodoroSeconds.value = 25 * 60;
-    store.showToast('Đã dừng chế độ học bài.');
+    store.showToast('Đã tạm dừng giờ học bài.');
   } else {
     pomodoroRunning.value = true;
     setStudyMode(true);
-    sendChatMessage('📚 Bắt đầu phiên học bài tập trung 25 phút tại quán!');
-    store.showToast('📚 Đã bật chế độ học bài 25 phút! Miễn nhiễm hoàn toàn với các đợt ném ly.');
+    sendChatMessage('📖 Bắt đầu phiên học bài yên tĩnh 25 phút tại 24h Café!');
+    store.showToast('Chế độ học bài 25 phút đã bật (Bảo vệ miễn nhiễm ném ly) 🍵');
+
+    if (pomodoroInterval) clearInterval(pomodoroInterval);
     pomodoroInterval = setInterval(() => {
       if (pomodoroSeconds.value > 0) {
-        pomodoroSeconds.value -= 1;
+        pomodoroSeconds.value--;
       } else {
         pomodoroRunning.value = false;
         setStudyMode(false);
         if (pomodoroInterval) clearInterval(pomodoroInterval);
         pomodoroSeconds.value = 25 * 60;
-        store.showToast('🎉 Hoàn thành 25 phút học bài! Hãy tự thưởng một ngụm cà phê nhé ☕.');
+        store.showToast('🎉 Hoàn thành 25 phút học bài! Hãy tự thưởng một ngụm trà Matcha nhé 🍵.');
       }
-    }, 1000);
+    } , 1000);
   }
 }
 
@@ -201,18 +232,25 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.cafe-top-hud {
+.kissaten-hud {
   position: absolute;
-  top: 12px;
-  left: 14px;
-  right: 14px;
-  z-index: 30;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: #fdfbf7;
+  border-bottom: 2.5px solid #4a3221;
+  box-shadow: 0 4px 18px rgba(43, 27, 17, 0.08);
+}
+
+.hud-inner {
+  max-width: 100%;
+  padding: 8px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
-  pointer-events: none;
 }
 
 .hud-left,
@@ -221,156 +259,269 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
-  pointer-events: auto;
 }
 
-.brand-badge {
-  display: inline-flex;
+/* Brand Link */
+.brand-link {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(24, 18, 14, 0.88);
-  border: 1px solid rgba(212, 163, 115, 0.35);
-  padding: 7px 13px;
-  border-radius: 999px;
+  gap: 10px;
   text-decoration: none;
-  color: #fef3c7;
-  font-family: 'Fraunces', Georgia, serif;
-  font-weight: 700;
-  font-size: 15px;
-  backdrop-filter: blur(8px);
+  color: #120803;
+  transition: transform 0.15s ease;
 }
 
-.brand-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #f59e0b;
+.brand-link:hover {
+  transform: translateY(-1px);
 }
 
-.brand-dot.online {
-  background: #34d399;
-  box-shadow: 0 0 8px #34d399;
+.brand-hanko {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #b91c1c;
+  border: 2px solid #7f1d1d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(185, 28, 28, 0.35);
+  flex-shrink: 0;
 }
 
-.room-select {
-  background: rgba(24, 18, 14, 0.88);
-  color: #f8f5f0;
-  border: 1px solid rgba(212, 163, 115, 0.35);
-  border-radius: 999px;
-  padding: 7px 12px;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  outline: none;
+.hanko-icon {
+  font-size: 16px;
 }
 
-.zone-pill {
-  background: rgba(24, 18, 14, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e6ccb2;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  display: inline-flex;
+.brand-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-main {
+  display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.divider {
-  opacity: 0.45;
+.brand-name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #120803;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
 }
 
-.hud-center {
-  background: rgba(20, 15, 12, 0.86);
-  border: 1px solid rgba(212, 163, 115, 0.28);
+.brand-tagline {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #4a3221;
+}
+
+.status-matcha-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9ca3af;
+}
+
+.status-matcha-dot.online {
+  background: #15803d;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+/* Room Selector & Zone Pill */
+.kissaten-pill {
+  background: #ffffff;
+  border: 1.5px solid #5c3a21;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #120803;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(74, 50, 33, 0.05);
+}
+
+.kissaten-pill:hover {
+  border-color: #8b2500;
+  background: #fdfbf7;
+}
+
+.divider {
+  opacity: 0.6;
+  font-weight: 900;
+  color: #4a3221;
+}
+
+/* Cycle Bar */
+.kissaten-cycle-bar {
+  background: #f7f3eb;
+  border: 1.5px solid #8c6239;
   border-radius: 999px;
   padding: 3px;
-  backdrop-filter: blur(8px);
+  display: flex;
+  gap: 3px;
+  box-shadow: 0 2px 4px rgba(74, 50, 33, 0.06);
 }
 
 .cycle-btn {
   border: none;
   background: transparent;
-  color: #d6ccc2;
-  padding: 5px 11px;
+  color: #2b1810;
+  padding: 5px 12px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  transition: all 0.18s ease;
+  transition: all 0.15s ease;
+}
+
+.cycle-btn:hover {
+  color: #000000;
+  background: rgba(74, 50, 33, 0.1);
 }
 
 .cycle-btn.active {
-  background: #d4a373;
-  color: #1c130e;
+  background: #1b4332;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(27, 67, 50, 0.35);
 }
 
+/* Action Buttons */
+.kissaten-btn {
+  background: #ffffff;
+  border: 1.5px solid #5c3a21;
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #120803;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(74, 50, 33, 0.05);
+  transition: all 0.15s ease;
+}
+
+.kissaten-btn:hover {
+  transform: translateY(-1px);
+  border-color: #8b2500;
+  background: #faedcd;
+}
+
+.kissaten-btn.active {
+  background: #1b4332;
+  border-color: #0d281e;
+  color: #ffffff;
+}
+
+/* Bamboo Equalizer */
+.bamboo-equalizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 14px;
+  width: 14px;
+}
+
+.bamboo-bar {
+  width: 2.5px;
+  background: #ffffff;
+  border-radius: 1px;
+  animation: bambooBounce 1.2s infinite ease-in-out alternate;
+}
+
+.b1 { height: 40%; animation-delay: 0.1s; }
+.b2 { height: 85%; animation-delay: 0.3s; }
+.b3 { height: 60%; animation-delay: 0.2s; }
+.b4 { height: 100%; animation-delay: 0.4s; }
+
+@keyframes bambooBounce {
+  0% { height: 25%; }
+  100% { height: 100%; }
+}
+
+/* Washi Audio Popover */
 .audio-cluster {
   position: relative;
 }
 
-.audio-popover {
+.washi-card {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   right: 0;
-  background: rgba(24, 18, 14, 0.95);
-  border: 1px solid rgba(212, 163, 115, 0.4);
-  border-radius: 12px;
-  padding: 10px 12px;
+  background: #ffffff;
+  border: 2px solid #4a3221;
+  border-radius: 18px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 170px;
+  gap: 12px;
+  min-width: 230px;
+  box-shadow: 0 16px 36px rgba(43, 27, 17, 0.2);
+}
+
+.popover-header {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b2500;
 }
 
 .slider-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  font-size: 12px;
-  color: #faedcd;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #120803;
 }
 
-.slider-row input {
-  width: 95px;
-  accent-color: #d4a373;
-}
-
-.hud-action-btn {
-  border: 1px solid rgba(212, 163, 115, 0.35);
-  background: rgba(24, 18, 14, 0.88);
-  color: #faedcd;
-  padding: 7px 12px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 600;
+.kissaten-slider {
+  width: 100px;
+  accent-color: #1b4332;
   cursor: pointer;
-  transition: all 0.16s ease;
 }
 
-.hud-action-btn:hover,
-.hud-action-btn.active {
-  background: #b07d56;
-  color: #fffbeb;
+/* Pomodoro */
+.pomodoro-btn.active {
+  background: #b91c1c;
+  border-color: #7f1d1d;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(185, 28, 28, 0.35);
 }
 
-.camera-btn {
-  background: linear-gradient(135deg, #d97706, #b45309);
-  border-color: #fbbf24;
-  color: #fffbeb;
+.pomo-digits {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-weight: 800;
+  font-size: 13px;
 }
 
-@media (max-width: 900px) {
+.pomo-badge {
+  background: #ffffff;
+  color: #b91c1c;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+@media (max-width: 960px) {
   .cycle-label,
-  .zone-pill {
+  .zone-pill,
+  .btn-text,
+  .brand-tagline {
     display: none;
   }
 }
 </style>
-

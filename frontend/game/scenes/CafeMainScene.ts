@@ -25,6 +25,28 @@ interface TwinkleStar {
   phase: number;
 }
 
+interface DustParticle {
+  x: number;
+  y: number;
+  baseX: number;
+  baseY: number;
+  r: number;
+  speed: number;
+  phase: number;
+  alpha: number;
+}
+
+interface ShootingStar {
+  x: number;
+  y: number;
+  len: number;
+  speedX: number;
+  speedY: number;
+  alpha: number;
+  life: number;
+  maxLife: number;
+}
+
 interface BaristaOrder {
   orderId: string;
   userId: string;
@@ -65,11 +87,16 @@ export class CafeMainScene extends Phaser.Scene {
   private rooftopCityGraphic!: Phaser.GameObjects.Graphics;
   private fairyLightsGraphic!: Phaser.GameObjects.Graphics;
   private rainGraphic!: Phaser.GameObjects.Graphics;
+  private starsGraphic!: Phaser.GameObjects.Graphics;
+  private dustGraphic!: Phaser.GameObjects.Graphics;
   private lampGlowGroup!: Phaser.GameObjects.Group;
   private ambientOverlay!: Phaser.GameObjects.Rectangle;
   private neonSignText!: Phaser.GameObjects.Text;
   private rainDrops: RainDrop[] = [];
   private twinkleStars: TwinkleStar[] = [];
+  private dustParticles: DustParticle[] = [];
+  private activeShootingStars: ShootingStar[] = [];
+  private shootingStarTimer = 0;
   private unsubscribers: Array<() => void> = [];
 
   private isAimingThrow = false;
@@ -146,7 +173,7 @@ export class CafeMainScene extends Phaser.Scene {
     // 1. TẦNG 2 - SÂN THƯỢNG (ROOFTOP: y: -780..0)
     // ==========================================
     // Base outer frame for rooftop
-    g.fillStyle(0x0a0c10, 1);
+    g.fillStyle(0x1e293b, 1);
     g.fillRect(0, -780, 1200, 780);
 
     // Rooftop Outdoor Teak Decking (y: -510..-20)
@@ -232,69 +259,126 @@ export class CafeMainScene extends Phaser.Scene {
     g.lineBetween(842, -25, 842, 110);
 
     // ==========================================
-    // 3. TẦNG 1 - GROUND FLOOR (y: 0..780)
+    // 3. TẦNG 1 - GROUND FLOOR: JAPANESE KISSATEN (y: 0..780)
     // ==========================================
     // Base outer frame for ground floor
-    g.fillStyle(0x161210, 1);
+    g.fillStyle(0x4a3221, 1);
     g.fillRect(0, 0, 1200, 780);
 
-    // Main Wooden Floor (Warm Oak Plank texture)
-    g.fillStyle(0x4a3525, 1);
+    // Main Wooden Floor (Light Hinoki & Oak Plank - Ghibli Cozy Wood)
+    g.fillStyle(0xa67c52, 1);
     g.fillRoundedRect(52, 100, 1096, 635, 14);
 
-    // Floor plank lines
-    g.lineStyle(1, 0x3d2b1e, 0.55);
+    // Light wooden floor plank lines
+    g.lineStyle(1, 0x8c6239, 0.45);
     for (let y = 130; y < 730; y += 32) {
       g.lineBetween(56, y, 1144, y);
     }
 
-    // Zone: Window Seats carpet
-    g.fillStyle(0x583e2b, 1);
+    // Zone: Window Seats - Woven Linen Runner (Vải lanh màu be yến mạch)
+    g.fillStyle(0xd5bdaf, 0.85);
     g.fillRoundedRect(75, 145, 235, 470, 10);
+    g.lineStyle(2, 0xb79ced, 0.3);
 
-    // Zone: Quiet Corner study rug
-    g.fillStyle(0x3a4f41, 0.65);
+    // Shoji Lattice Window accents on left wall
+    for (let sy = 160; sy <= 560; sy += 140) {
+      g.fillStyle(0xfefae0, 0.7);
+      g.fillRect(56, sy, 14, 100);
+      g.lineStyle(1, 0x5c3d2e, 0.8);
+      g.strokeRect(56, sy, 14, 100);
+      g.lineBetween(56, sy + 33, 70, sy + 33);
+      g.lineBetween(56, sy + 66, 70, sy + 66);
+    }
+
+    // Zone: Quiet Corner - Traditional Japanese Tatami Mat (Chiếu cói Tatami)
+    g.fillStyle(0x9ca777, 0.95);
     g.fillRoundedRect(835, 135, 285, 285, 12);
-    g.lineStyle(2, 0x6b9080, 0.45);
+    // Tatami dark indigo borders
+    g.lineStyle(3, 0x3d5a40, 1);
     g.strokeRoundedRect(835, 135, 285, 285, 12);
+    g.lineBetween(835, 277, 1120, 277);
+    g.lineBetween(977, 135, 977, 420);
 
-    // Zone: Garden Terrace patio
-    g.fillStyle(0x28362c, 1);
+    // Zone: Garden Terrace - Japanese Zen Stone & Bamboo Patio (Vườn thiền sỏi đá)
+    g.fillStyle(0xe9ecef, 0.95);
     g.fillRoundedRect(835, 450, 295, 265, 12);
-    g.lineStyle(2, 0x52796f, 0.6);
+    g.lineStyle(2, 0xced4da, 0.8);
     g.strokeRoundedRect(835, 450, 295, 265, 12);
 
-    // Stepping stones
-    g.fillStyle(0x354f52, 0.75);
-    for (let gx = 860; gx < 1100; gx += 60) {
-      for (let gy = 475; gy < 695; gy += 60) {
-        g.fillRoundedRect(gx, gy, 44, 44, 8);
-      }
-    }
-    // Perimeter bushes
-    g.fillStyle(0x2d6a4f, 1);
-    for (let bx = 850; bx <= 1110; bx += 36) {
-      g.fillCircle(bx, 455, 14);
-      g.fillCircle(bx, 712, 14);
+    // Zen Sand Rake wave lines
+    g.lineStyle(1, 0xb8c0c8, 0.5);
+    for (let zy = 465; zy < 705; zy += 18) {
+      g.lineBetween(845, zy, 1120, zy);
     }
 
-    // Top Back Wall
-    g.fillStyle(0x2d2018, 1);
+    // Natural stepping river stones
+    g.fillStyle(0x495057, 0.85);
+    for (let gx = 865; gx < 1100; gx += 60) {
+      for (let gy = 480; gy < 695; gy += 60) {
+        g.fillCircle(gx + 15, gy + 15, 16);
+      }
+    }
+    // Bonsai & Bamboo Greenery
+    g.fillStyle(0x2d6a4f, 1);
+    for (let bx = 850; bx <= 1110; bx += 36) {
+      g.fillCircle(bx, 455, 15);
+      g.fillCircle(bx, 712, 15);
+    }
+    // Miniature Stone Lantern (Toro)
+    g.fillStyle(0x6c757d, 1);
+    g.fillRoundedRect(1070, 470, 24, 28, 4);
+    g.fillStyle(0xfde047, 0.9);
+    g.fillCircle(1082, 484, 5); // Warm Lantern light
+
+    // Top Back Wall - Warm Cedar Wood
+    g.fillStyle(0x3e271a, 1);
     g.fillRect(52, 24, 1096, 86);
-    g.lineStyle(3, 0x7f5539, 1);
-    // Draw back wall line leaving opening for staircase
+    g.lineStyle(3, 0x6f4518, 1);
     g.lineBetween(52, 110, 760, 110);
     g.lineBetween(845, 110, 1148, 110);
 
-    // Coffee Bar Counter
-    g.fillStyle(0x3b2618, 1);
-    g.fillRoundedRect(400, 120, 345, 78, 10);
+    // Japanese Noren Curtain (Rèm Noren vải lanh xanh trà trên quầy bar)
+    const norenColors = [0x283618, 0x3a5a40, 0x283618, 0x3a5a40];
+    for (let ni = 0; ni < 4; ni++) {
+      g.fillStyle(norenColors[ni], 0.95);
+      g.fillRoundedRect(440 + ni * 60, 36, 52, 54, 4);
+    }
+
+    // Japanese Kissaten Bar Counter - Hinoki Light Wood & Brass
+    g.fillStyle(0x5c3d2e, 1);
+    g.fillRoundedRect(398, 120, 350, 80, 10);
+    // Hinoki light solid wood top
     g.fillStyle(0xd4a373, 1);
-    g.fillRoundedRect(396, 116, 353, 18, 6);
-    g.fillStyle(0x94a3b8, 1);
-    g.fillRoundedRect(435, 100, 56, 32, 5);
-    g.fillStyle(0xb45309, 1);
-    g.fillRoundedRect(645, 102, 65, 28, 5);
+    g.fillRoundedRect(394, 114, 358, 22, 6);
+    g.lineStyle(2, 0xbc6c25, 0.9);
+    g.strokeRoundedRect(394, 114, 358, 22, 6);
+
+    // Vintage Siphon Coffee Maker & Kyusu Tea Pot (Phin Siphon thủy tinh & ấm trà)
+    g.fillStyle(0x38bdf8, 0.6); // Siphon Glass bulb
+    g.fillCircle(450, 108, 9);
+    g.fillCircle(450, 90, 7);
+    g.lineStyle(2, 0xd4a373, 1);
+    g.lineBetween(450, 97, 450, 118);
+    // Japanese Kyusu Green Teapot
+    g.fillStyle(0x3a5a40, 1);
+    g.fillCircle(485, 106, 8);
+    g.fillStyle(0xbc6c25, 1);
+    g.fillRect(491, 104, 8, 3); // Wooden handle
+
+    // Glass Pastry Case - Japanese Caramel Pudding & Matcha Roll Cake
+    g.fillStyle(0x38bdf8, 0.16);
+    g.fillRoundedRect(635, 96, 75, 34, 5);
+    g.lineStyle(1.5, 0x7dd3fc, 0.6);
+    g.strokeRoundedRect(635, 96, 75, 34, 5);
+    // Pudding with caramel cap & Matcha Cake
+    g.fillStyle(0xfde047, 0.95);
+    g.fillCircle(652, 114, 6); // Custard pudding
+    g.fillStyle(0x78350f, 0.95);
+    g.fillCircle(652, 110, 4); // Caramel sauce
+    g.fillStyle(0x4d7c0f, 0.95);
+    g.fillCircle(674, 114, 5.5); // Matcha Roll cake
+    g.fillStyle(0xf43f5e, 0.95);
+    g.fillCircle(692, 114, 4); // Strawberry Daifuku
 
     // Bookshelves on back wall
     g.fillStyle(0x3d2817, 1);
@@ -315,31 +399,45 @@ export class CafeMainScene extends Phaser.Scene {
     // Draw Ground Floor Tables
     this.drawGroundTables(g);
 
-    // Watermark Zone Labels
-    const labelStyle = {
-      fontFamily: '"Fraunces", Georgia, serif',
-      fontSize: '13px',
-      color: 'rgba(250, 237, 205, 0.38)',
-      fontStyle: 'italic',
+    // Watermark Zone Labels - High Contrast Japanese Kissaten Style
+    const groundLabelStyle = {
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontSize: '11px',
+      color: '#120803',
+      backgroundColor: '#fdfbf7',
+      padding: { left: 8, right: 8, top: 3, bottom: 3 },
+      fontStyle: 'bold',
     };
+
+    const rooftopLabelStyle = {
+      fontFamily: '"Plus Jakarta Sans", sans-serif',
+      fontSize: '11px',
+      color: '#120803',
+      backgroundColor: '#fdfbf7',
+      padding: { left: 8, right: 8, top: 3, bottom: 3 },
+      fontStyle: 'bold',
+    };
+
     // Tầng 1
-    this.add.text(135, 122, 'Window Seats', labelStyle);
-    this.add.text(535, 260, 'Main Hall', labelStyle);
-    this.add.text(925, 116, 'Quiet Corner • Study Zone', labelStyle);
-    this.add.text(930, 428, 'Garden Terrace', labelStyle);
+    this.add.text(135, 122, 'Bàn Cửa Sổ • Window Seats', groundLabelStyle);
+    this.add.text(535, 260, 'Sảnh Chung • Main Hall', groundLabelStyle);
+    this.add.text(925, 116, 'Khu Yên Tĩnh • Quiet Zone', groundLabelStyle);
+    this.add.text(930, 428, 'Vườn Thư Giãn • Zen Garden', groundLabelStyle);
     this.add
-      .text(580, 704, 'ENTRANCE', {
+      .text(580, 704, 'LỐI VÀO • ENTRANCE', {
         fontFamily: '"Plus Jakarta Sans", sans-serif',
         fontSize: '11px',
-        fontStyle: '700',
-        color: '#faedcd',
+        fontStyle: '800',
+        color: '#ffffff',
+        backgroundColor: '#1b4332',
+        padding: { left: 8, right: 8, top: 3, bottom: 3 },
       })
       .setOrigin(0.5);
 
     // Sân Thượng Labels
-    this.add.text(540, -490, 'Skyline Panorama View', labelStyle);
-    this.add.text(880, -390, 'Moonlight Lounge', labelStyle);
-    this.add.text(540, -280, 'Starry Bistro', labelStyle);
+    this.add.text(540, -490, 'Sân Thượng • Skyline Panorama View', rooftopLabelStyle);
+    this.add.text(880, -390, 'Khu Ngắm Trăng • Moonlight Lounge', rooftopLabelStyle);
+    this.add.text(540, -280, 'Bàn Đôi Sân Thượng • Starry Bistro', rooftopLabelStyle);
   }
 
   private drawGroundTables(g: Phaser.GameObjects.Graphics) {
@@ -460,12 +558,12 @@ export class CafeMainScene extends Phaser.Scene {
     });
 
     this.add
-      .text(570, 48, '☕ COFFEE BAR • GỌI ĐỒ UỐNG', {
+      .text(570, 48, '☕ QUẦY PHA CHẾ • COFFEE BAR (GỌI NƯỚC)', {
         fontFamily: '"Plus Jakarta Sans", sans-serif',
-        fontSize: '12px',
-        fontStyle: '700',
-        color: '#fde68a',
-        backgroundColor: 'rgba(28, 20, 15, 0.85)',
+        fontSize: '11.5px',
+        fontStyle: '800',
+        color: '#ffffff',
+        backgroundColor: '#1b4332',
         padding: { left: 10, right: 10, top: 5, bottom: 5 },
       })
       .setOrigin(0.5);
@@ -700,6 +798,38 @@ export class CafeMainScene extends Phaser.Scene {
         y: -780 + Math.random() * 1560,
         len: 11 + Math.random() * 11,
         speed: 270 + Math.random() * 180,
+      });
+    }
+
+    // Stars on Rooftop sky (-4985 depth)
+    this.starsGraphic = this.add.graphics().setDepth(-4985);
+    this.twinkleStars = [];
+    for (let i = 0; i < 75; i++) {
+      this.twinkleStars.push({
+        x: 60 + Math.random() * 1080,
+        y: -755 + Math.random() * 230,
+        r: 0.8 + Math.random() * 1.8,
+        alpha: 0.3 + Math.random() * 0.7,
+        speed: 1.2 + Math.random() * 2.5,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+
+    // Atmospheric Lo-fi Floating Dust Motes (depth 8080)
+    this.dustGraphic = this.add.graphics().setDepth(8080);
+    this.dustParticles = [];
+    for (let i = 0; i < 45; i++) {
+      const bx = 80 + Math.random() * 1040;
+      const by = -500 + Math.random() * 1200;
+      this.dustParticles.push({
+        x: bx,
+        y: by,
+        baseX: bx,
+        baseY: by,
+        r: 1 + Math.random() * 1.5,
+        speed: 10 + Math.random() * 14,
+        phase: Math.random() * Math.PI * 2,
+        alpha: 0.2 + Math.random() * 0.45,
       });
     }
 
@@ -1282,6 +1412,85 @@ export class CafeMainScene extends Phaser.Scene {
       avatar.update(delta);
     }
     this.updateRainAnimation(delta);
+    this.updateCosmicSky(_time, delta);
+    this.updateDustParticles(_time, delta);
+  }
+
+  private updateCosmicSky(time: number, delta: number) {
+    this.starsGraphic.clear();
+    const isNight = this.currentCycle === 'midnight' || this.currentCycle === 'sunset';
+    if (!isNight) return;
+
+    // 1. Draw twinkling stars
+    for (const star of this.twinkleStars) {
+      const alphaVal =
+        star.alpha * (0.35 + 0.65 * (Math.sin(time * 0.002 * star.speed + star.phase) ** 2));
+      this.starsGraphic.fillStyle(0xfef08a, alphaVal);
+      this.starsGraphic.fillCircle(star.x, star.y, star.r);
+    }
+
+    // 2. Spawn and update Shooting Stars
+    this.shootingStarTimer += delta;
+    if (this.currentCycle === 'midnight' && this.shootingStarTimer >= 7500) {
+      this.shootingStarTimer = 0;
+      if (Math.random() < 0.8 && this.activeShootingStars.length < 2) {
+        this.activeShootingStars.push({
+          x: 100 + Math.random() * 800,
+          y: -750 + Math.random() * 80,
+          len: 40 + Math.random() * 35,
+          speedX: 350 + Math.random() * 200,
+          speedY: 180 + Math.random() * 120,
+          alpha: 1,
+          life: 0,
+          maxLife: 650 + Math.random() * 300,
+        });
+      }
+    }
+
+    // Render active shooting stars
+    for (let i = this.activeShootingStars.length - 1; i >= 0; i--) {
+      const ss = this.activeShootingStars[i];
+      ss.life += delta;
+      const progress = ss.life / ss.maxLife;
+      if (progress >= 1) {
+        this.activeShootingStars.splice(i, 1);
+        continue;
+      }
+      ss.x += ss.speedX * (delta / 1000);
+      ss.y += ss.speedY * (delta / 1000);
+      const curAlpha = (1 - progress) * 0.95;
+
+      this.starsGraphic.lineStyle(2, 0xe0f2fe, curAlpha);
+      this.starsGraphic.lineBetween(
+        ss.x,
+        ss.y,
+        ss.x - (ss.len * ss.speedX) / 400,
+        ss.y - (ss.len * ss.speedY) / 400,
+      );
+      this.starsGraphic.fillStyle(0xffffff, curAlpha);
+      this.starsGraphic.fillCircle(ss.x, ss.y, 2);
+    }
+  }
+
+  private updateDustParticles(time: number, delta: number) {
+    this.dustGraphic.clear();
+    const cfg = WORLD_CYCLES[this.currentCycle] || WORLD_CYCLES.midnight;
+    const globalAlphaMul = this.currentCycle === 'morning' ? 0.35 : 0.65;
+
+    for (const p of this.dustParticles) {
+      p.y -= p.speed * (delta / 1000);
+      p.x = p.baseX + Math.sin(time * 0.0012 + p.phase) * 14;
+
+      if (p.y < -520) {
+        p.y = 730;
+        p.baseY = 730;
+      }
+
+      const pulse = 0.5 + 0.5 * Math.sin(time * 0.002 + p.phase);
+      const a = p.alpha * pulse * globalAlphaMul;
+      this.dustGraphic.fillStyle(0xfde68a, a);
+      this.dustGraphic.fillCircle(p.x, p.y, p.r);
+    }
   }
 
   private updateAimGuide() {

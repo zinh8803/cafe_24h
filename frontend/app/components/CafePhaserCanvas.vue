@@ -32,7 +32,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, #231a14 0%, #100c0a 100%);
+  background: transparent;
   overflow: hidden;
 }
 
@@ -42,6 +42,12 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.phaser-canvas-host :deep(canvas) {
+  display: block;
+  box-shadow: 0 16px 48px rgba(43, 27, 17, 0.25);
+  border-radius: 12px;
 }
 </style>
 

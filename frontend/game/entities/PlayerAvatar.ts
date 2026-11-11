@@ -36,9 +36,10 @@ export class PlayerAvatar {
     this.container = scene.add.container(state.x, state.y);
     this.container.setDepth(3000 + Math.round(state.y));
 
-    // Shadow on floor
-    const shadow = scene.add.ellipse(0, 18, 34, 14, 0x0b0908, 0.38);
-    this.container.add(shadow);
+    // Shadow on floor - multi-layered soft ambient contact shadow
+    const shadowOuter = scene.add.ellipse(0, 18, 40, 16, 0x090706, 0.22);
+    const shadowInner = scene.add.ellipse(0, 18, 28, 10, 0x090706, 0.38);
+    this.container.add([shadowOuter, shadowInner]);
 
     // Animated character body sub-container
     this.bodyContainer = scene.add.container(0, 0);
@@ -143,22 +144,26 @@ export class PlayerAvatar {
     const g = this.bodyGraphic;
     g.clear();
 
-    // Study mode peaceful halo aura
+    // Study mode peaceful halo aura - soft ethereal glow
     if (this.state.isStudying) {
-      g.lineStyle(2, 0x38bdf8, 0.7);
-      g.strokeEllipse(0, -12, 42, 52);
       g.fillStyle(0x38bdf8, 0.08);
-      g.fillEllipse(0, -12, 42, 52);
+      g.fillEllipse(0, -12, 46, 56);
+      g.lineStyle(2, 0x38bdf8, 0.75);
+      g.strokeEllipse(0, -12, 44, 54);
+      g.lineStyle(1, 0xbae6fd, 0.5);
+      g.strokeEllipse(0, -12, 40, 50);
     }
 
-    // Self selection ring on floor
+    // Self selection ring on floor with amber glow
     if (this.isSelf) {
-      g.lineStyle(2, 0xf59e0b, 0.75);
-      g.strokeEllipse(0, 17, 38, 16);
+      g.lineStyle(2.5, 0xf59e0b, 0.85);
+      g.strokeEllipse(0, 18, 42, 18);
+      g.fillStyle(0xfef08a, 0.12);
+      g.fillEllipse(0, 18, 40, 16);
     }
 
     // Legs / sitting posture
-    g.fillStyle(0x2b2523, 1);
+    g.fillStyle(0x221a16, 1);
     if (this.state.seatId) {
       const legOffsetX =
         this.state.direction === 'left' ? -8 : this.state.direction === 'right' ? 8 : 0;
@@ -169,24 +174,30 @@ export class PlayerAvatar {
       g.fillRoundedRect(2, 8, 6, 11, 3);
     }
 
-    // Torso / Cozy sweater
+    // Torso / Cozy knit sweater
     g.fillStyle(outfit.primaryColor, 1);
     g.fillRoundedRect(-12, -8, 24, 19, 7);
 
+    // Knit texture lines across sweater
+    g.lineStyle(1, outfit.accentColor, 0.35);
+    g.lineBetween(-10, -3, 10, -3);
+    g.lineBetween(-10, 2, 10, 2);
+    g.lineBetween(-9, 7, 9, 7);
+
     // Collar / Scarf accent
     g.fillStyle(outfit.accentColor, 1);
-    g.fillRoundedRect(-8, -8, 16, 5, 2);
+    g.fillRoundedRect(-8, -9, 16, 6, 2.5);
 
     // Head
     g.fillStyle(preset.skinColor, 1);
-    g.fillCircle(0, -20, 12);
+    g.fillCircle(0, -20, 12.5);
 
     // Blush cheeks
-    g.fillStyle(0xf4978e, 0.45);
-    g.fillCircle(-6, -18, 2.4);
-    g.fillCircle(6, -18, 2.4);
+    g.fillStyle(0xf4978e, 0.5);
+    g.fillCircle(-6.5, -18, 2.6);
+    g.fillCircle(6.5, -18, 2.6);
 
-    // Eyes based on direction
+    // Eyes based on direction with tiny reflection glint
     g.fillStyle(0x221a17, 1);
     const eyeShiftX =
       this.state.direction === 'left' ? -2.5 : this.state.direction === 'right' ? 2.5 : 0;
@@ -195,27 +206,40 @@ export class PlayerAvatar {
         g.fillRect(-6 + eyeShiftX, -21, 4, 1.5);
         g.fillRect(2 + eyeShiftX, -21, 4, 1.5);
       } else {
-        g.fillCircle(-4.2 + eyeShiftX, -20.5, 1.7);
-        g.fillCircle(4.2 + eyeShiftX, -20.5, 1.7);
+        // Eye base
+        g.fillCircle(-4.2 + eyeShiftX, -20.5, 1.8);
+        g.fillCircle(4.2 + eyeShiftX, -20.5, 1.8);
+        // Eye sparkle highlight
+        g.fillStyle(0xffffff, 0.85);
+        g.fillCircle(-3.8 + eyeShiftX, -21.2, 0.7);
+        g.fillCircle(4.6 + eyeShiftX, -21.2, 0.7);
+        g.fillStyle(0x221a17, 1);
       }
     }
 
-    // Hair style variations
+    // Hair style variations with natural volume
     g.fillStyle(preset.hairColor, 1);
-    g.fillRoundedRect(-12, -33, 24, 10, 6);
+    g.fillRoundedRect(-12.5, -33.5, 25, 11, 6.5);
 
     if (preset.hairStyle === 'bun') {
-      g.fillCircle(0, -36, 6);
+      g.fillCircle(0, -36.5, 6.5);
+      g.lineStyle(1.5, outfit.accentColor, 0.8); // Hair ribbon
+      g.strokeCircle(0, -36.5, 6.5);
     } else if (preset.hairStyle === 'cat_ears') {
-      g.fillTriangle(-11, -30, -4, -30, -9, -39);
-      g.fillTriangle(4, -30, 11, -30, 9, -39);
+      g.fillTriangle(-11, -30, -4, -30, -9, -40);
+      g.fillTriangle(4, -30, 11, -30, 9, -40);
+      // Inner ear pink
+      g.fillStyle(0xfbcfe8, 1);
+      g.fillTriangle(-10, -31, -5, -31, -8.5, -38);
+      g.fillTriangle(5, -31, 10, -31, 8.5, -38);
     } else if (preset.hairStyle === 'beanie') {
       g.fillStyle(outfit.primaryColor, 1);
-      g.fillRoundedRect(-13, -35, 26, 10, 5);
-      g.fillCircle(0, -37, 4);
+      g.fillRoundedRect(-13.5, -35.5, 27, 11, 5.5);
+      g.fillStyle(outfit.accentColor, 1);
+      g.fillCircle(0, -38, 4.5); // Beanie pom-pom
     } else if (preset.hairStyle === 'bob') {
-      g.fillRoundedRect(-13, -29, 5, 13, 3);
-      g.fillRoundedRect(8, -29, 5, 13, 3);
+      g.fillRoundedRect(-13.5, -29, 5.5, 13.5, 3);
+      g.fillRoundedRect(8, -29, 5.5, 13.5, 3);
     }
 
     this.drinkText.setText(this.state.drinkIcon || '');

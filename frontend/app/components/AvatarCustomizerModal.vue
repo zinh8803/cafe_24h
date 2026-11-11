@@ -1,83 +1,93 @@
 <template>
-  <div v-if="store.showCustomizerModal" class="modal-backdrop" @click.self="close">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div>
-          <h3>✨ Hồ Sơ & Tâm Trạng Hôm Nay</h3>
-          <p class="subtitle">Chọn diện mạo và tâm trạng để mọi người trong quán đồng cảm cùng bạn.</p>
+  <transition name="fade-modal">
+    <div v-if="store.showCustomizerModal" class="modal-backdrop" @click.self="close">
+      <div class="modal-card kissaten-customizer-card">
+        <div class="modal-header">
+          <div>
+            <div class="header-pretitle">DANH TÍNH & TÂM TRẠNG • TÙY CHỈNH NHÂN VẬT</div>
+            <h3 class="header-title">✨ Diện Mạo & Tâm Trạng Hôm Nay</h3>
+            <p class="subtitle">
+              Chọn phong cách và cảm xúc hôm nay để mọi người trong quán cùng sẻ chia.
+            </p>
+          </div>
+          <button type="button" class="close-btn" @click="close">✕</button>
         </div>
-        <button type="button" class="close-btn" @click="close">✕</button>
+
+        <form class="customizer-body" @submit.prevent="save">
+          <!-- Nickname -->
+          <label class="field-block">
+            <span class="field-label">Tên hiển thị tại quán</span>
+            <input
+              v-model="localNickname"
+              type="text"
+              maxlength="24"
+              placeholder="Ví dụ: Mây Lang Thang, Haruki..."
+              class="text-input washi-input"
+            />
+          </label>
+
+          <!-- Daily Mood -->
+          <div class="field-block">
+            <span class="field-label">Daily Mood – Cảm xúc hôm nay</span>
+            <div class="grid-options mood-grid">
+              <button
+                v-for="m in MOOD_OPTIONS"
+                :key="m.id"
+                type="button"
+                class="option-chip mood-chip washi-chip"
+                :class="{ selected: localMood === m.id }"
+                @click="localMood = m.id"
+              >
+                <span class="big-emoji">{{ m.emoji }}</span>
+                <span class="mood-text">{{ m.label }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Avatar Style -->
+          <div class="field-block">
+            <span class="field-label">Phong Cách Nhân Vật Ghibli</span>
+            <div class="grid-options">
+              <button
+                v-for="av in AVATAR_PRESETS"
+                :key="av.id"
+                type="button"
+                class="option-chip avatar-chip washi-chip"
+                :class="{ selected: localAvatarId === av.id }"
+                @click="localAvatarId = av.id"
+              >
+                <span class="chip-icon">🧑</span>
+                <span>{{ av.name }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Outfit Presets -->
+          <div class="field-block">
+            <span class="field-label">Trang Phục Len Ấm & Kimono Dệt Mộc</span>
+            <div class="grid-options">
+              <button
+                v-for="out in OUTFIT_PRESETS"
+                :key="out.id"
+                type="button"
+                class="option-chip outfit-chip washi-chip"
+                :class="{ selected: localOutfitId === out.id }"
+                @click="localOutfitId = out.id"
+              >
+                <span class="swatch" :style="{ backgroundColor: out.cssColor }" />
+                <span>{{ out.name }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="secondary-btn" @click="close">Đóng</button>
+            <button type="submit" class="primary-btn hanko-save-btn">Lưu & Xuất Hiện Trong Quán</button>
+          </div>
+        </form>
       </div>
-
-      <form class="customizer-body" @submit.prevent="save">
-        <label class="field-block">
-          <span class="field-label">Tên hiển thị trên đầu nhân vật</span>
-          <input
-            v-model="localNickname"
-            type="text"
-            maxlength="24"
-            placeholder="Ví dụ: Mây Lang Thang..."
-            class="text-input"
-          />
-        </label>
-
-        <div class="field-block">
-          <span class="field-label">Daily Mood – Tâm trạng mỗi ngày (F07 / 4.1)</span>
-          <div class="grid-options mood-grid">
-            <button
-              v-for="m in MOOD_OPTIONS"
-              :key="m.id"
-              type="button"
-              class="option-chip"
-              :class="{ selected: localMood === m.id }"
-              @click="localMood = m.id"
-            >
-              <span class="big-emoji">{{ m.emoji }}</span>
-              <span>{{ m.label }}</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="field-block">
-          <span class="field-label">Mẫu Nhân Vật (6 phong cách)</span>
-          <div class="grid-options">
-            <button
-              v-for="av in AVATAR_PRESETS"
-              :key="av.id"
-              type="button"
-              class="option-chip"
-              :class="{ selected: localAvatarId === av.id }"
-              @click="localAvatarId = av.id"
-            >
-              <span>🧑 {{ av.name }}</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="field-block">
-          <span class="field-label">Trang Phục Miễn Phí (F11)</span>
-          <div class="grid-options">
-            <button
-              v-for="out in OUTFIT_PRESETS"
-              :key="out.id"
-              type="button"
-              class="option-chip"
-              :class="{ selected: localOutfitId === out.id }"
-              @click="localOutfitId = out.id"
-            >
-              <span class="swatch" :style="{ backgroundColor: out.cssColor }" />
-              <span>{{ out.name }}</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="secondary-btn" @click="close">Đóng</button>
-          <button type="submit" class="primary-btn">Lưu & Cập Nhật Vào Quán</button>
-        </div>
-      </form>
     </div>
-  </div>
+  </transition>
 </template>
 
 <script setup lang="ts">
@@ -131,24 +141,25 @@ function save() {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(10, 8, 6, 0.76);
-  backdrop-filter: blur(6px);
+  background: rgba(18, 12, 8, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
 }
 
-.modal-card {
-  width: min(560px, 96vw);
+.kissaten-customizer-card {
+  width: min(600px, 96vw);
   max-height: 90vh;
   overflow-y: auto;
-  background: #1f1712;
-  border: 1px solid rgba(212, 163, 115, 0.45);
-  border-radius: 20px;
-  padding: 22px;
-  color: #f8f5f0;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+  background: #ffffff;
+  border: 2.5px solid #4a3221;
+  border-radius: 24px;
+  padding: 24px;
+  color: #120803;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
 .modal-header {
@@ -156,34 +167,61 @@ function save() {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 2px dashed #8c6239;
+  padding-bottom: 14px;
 }
 
-.modal-header h3 {
+.header-pretitle {
+  font-size: 11.5px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: #8b2500;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.header-title {
   margin: 0;
   font-family: 'Fraunces', Georgia, serif;
-  font-size: 20px;
-  color: #fef3c7;
+  font-size: 23px;
+  font-weight: 800;
+  color: #120803;
+  letter-spacing: -0.01em;
 }
 
 .subtitle {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: #cbb8a4;
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #3d2314;
+  line-height: 1.45;
 }
 
 .close-btn {
-  background: transparent;
-  border: none;
-  color: #d6ccc2;
-  font-size: 18px;
+  background: #fdfbf7;
+  border: 1.5px solid #4a3221;
+  color: #120803;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  transition: all 0.16s ease;
+}
+
+.close-btn:hover {
+  background: #faedcd;
 }
 
 .customizer-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .field-block {
@@ -193,81 +231,130 @@ function save() {
 }
 
 .field-label {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #e6ccb2;
+  font-size: 13px;
+  font-weight: 800;
+  color: #3d2314;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
-.text-input {
-  background: #130e0b;
-  border: 1px solid rgba(212, 163, 115, 0.4);
-  border-radius: 10px;
+.washi-input {
+  background: #ffffff;
+  border: 2px solid #5c3a21;
+  border-radius: 14px;
   padding: 10px 14px;
-  color: #fffbeb;
+  color: #120803;
   font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.washi-input:focus {
+  border-color: #1b4332;
+  box-shadow: 0 0 0 3px rgba(27, 67, 50, 0.2);
+  background: #ffffff;
 }
 
 .grid-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.option-chip {
-  background: #2b2019;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 11px;
-  padding: 9px 11px;
-  color: #f5ebe0;
+.washi-chip {
+  background: #fdfbf7;
+  border: 1.5px solid #5c3a21;
+  color: #120803;
+  padding: 8px 14px;
+  border-radius: 14px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 
-.option-chip.selected {
-  background: rgba(212, 163, 115, 0.25);
-  border-color: #fbbf24;
-  color: #fef3c7;
+.washi-chip:hover {
+  background: #faedcd;
+  border-color: #8b2500;
+  transform: translateY(-1px);
+}
+
+.washi-chip.selected {
+  background: #fefae0;
+  border-color: #1b4332;
+  color: #1b4332;
+  box-shadow: 0 3px 10px rgba(27, 67, 50, 0.25);
+}
+
+.mood-chip {
+  padding: 8px 12px;
+}
+
+.big-emoji {
+  font-size: 18px;
 }
 
 .swatch {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 2px solid #4a3221;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  padding-top: 14px;
+  border-top: 1.5px solid #d4c5b2;
   margin-top: 6px;
 }
 
 .secondary-btn {
-  background: transparent;
-  border: 1px solid rgba(212, 163, 115, 0.35);
-  color: #e6ccb2;
-  padding: 9px 16px;
-  border-radius: 10px;
+  background: #fdfbf7;
+  border: 1.5px solid #5c3a21;
+  color: #120803;
+  padding: 9px 18px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
-  font-weight: 600;
 }
 
-.primary-btn {
-  background: #d4a373;
+.secondary-btn:hover {
+  background: #faedcd;
+}
+
+.hanko-save-btn {
+  background: #1b4332;
   border: none;
-  color: #1c130e;
-  padding: 9px 18px;
-  border-radius: 10px;
+  color: #ffffff;
+  padding: 9px 20px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 13px;
   cursor: pointer;
-  font-weight: 700;
+  transition: all 0.18s ease;
+}
+
+.hanko-save-btn:hover {
+  background: #2d6a4f;
+  transform: translateY(-1px);
+}
+
+/* Modal Fade Animation */
+.fade-modal-enter-active,
+.fade-modal-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fade-modal-enter-from,
+.fade-modal-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
 }
 </style>
-
